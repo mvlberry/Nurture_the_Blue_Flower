@@ -1,54 +1,753 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>像素花园 · Pixel Garden</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
-    <title>给你的礼物</title>
+    :root {
+        --ink: #241c34;
+        --panel: #342947;
+        --panel-light: #4a3a63;
+        --cream: #f2e6c9;
+        --blue: #5aa9e6;
+        --coffee: #a0663a;
+        --choco: #6b4226;
+    }
 
-    <style>
-        body {
-            margin: 0;
-            height: 100vh;
+    body {
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: #141020;
+        font-family: 'Press Start 2P', "Microsoft YaHei", monospace;
+        color: var(--cream);
+        overflow: hidden;
+        user-select: none;
+    }
 
-            display: flex;
-            justify-content: center;
-            align-items: center;
+    .bg-star {
+        position: fixed;
+        width: 4px; height: 4px;
+        background: #ffffff;
+        animation: twinkle 2.5s infinite ease-in-out;
+        pointer-events: none;
+    }
+    @keyframes twinkle {
+        0%, 100% { opacity: .15; }
+        50% { opacity: .8; }
+    }
 
-            background: #111;
-            color: white;
+    .game-frame {
+        position: relative;
+        width: 460px;
+        max-width: 94vw;
+        background: var(--panel);
+        border: 4px solid var(--ink);
+        box-shadow:
+            0 0 0 4px var(--panel-light),
+            0 0 0 8px var(--ink),
+            12px 12px 0 8px rgba(0,0,0,.45);
+        padding: 18px;
+        text-align: center;
+    }
 
-            font-family: Arial, sans-serif;
-        }
+    h1 {
+        font-size: 15px;
+        letter-spacing: 2px;
+        color: var(--blue);
+        text-shadow: 2px 2px 0 var(--ink);
+        margin-bottom: 4px;
+    }
+    .subtitle {
+        font-size: 8px;
+        color: #b9a8d8;
+        margin-bottom: 14px;
+        letter-spacing: 1px;
+    }
 
-        .container {
-            text-align: center;
-        }
+    .screen-wrap {
+        border: 4px solid var(--ink);
+        box-shadow: inset 0 0 0 2px #00000055;
+        background: #1a2438;
+        line-height: 0;
+    }
+    canvas {
+        width: 100%;
+        image-rendering: pixelated;
+        image-rendering: crisp-edges;
+    }
 
-        button {
-            padding: 14px 28px;
-            font-size: 18px;
-            cursor: pointer;
-        }
-    </style>
+    .hud {
+        margin-top: 14px;
+        text-align: left;
+    }
+    .hud-label {
+        font-size: 8px;
+        color: #b9a8d8;
+        margin-bottom: 6px;
+        display: flex;
+        justify-content: space-between;
+    }
+    .bar {
+        height: 16px;
+        border: 3px solid var(--ink);
+        background: #1c1626;
+        padding: 2px;
+    }
+    .bar-fill {
+        height: 100%;
+        width: 0%;
+        background: repeating-linear-gradient(
+            90deg,
+            var(--blue) 0 8px,
+            #7cc0f2 8px 16px
+        );
+        transition: width .5s steps(8);
+    }
+
+    .message {
+        margin-top: 12px;
+        min-height: 30px;
+        font-size: 9px;
+        line-height: 1.7;
+        color: var(--cream);
+        background: #241c34;
+        border: 3px solid var(--ink);
+        padding: 8px 10px;
+        text-align: left;
+    }
+
+    .controls {
+        margin-top: 14px;
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+    }
+
+    .px-btn {
+        font-family: inherit;
+        font-size: 9px;
+        padding: 12px 14px;
+        cursor: pointer;
+        color: var(--cream);
+        background: var(--panel-light);
+        border: 3px solid var(--ink);
+        box-shadow: inset -3px -3px 0 #00000044, inset 3px 3px 0 #ffffff22, 0 4px 0 var(--ink);
+        transition: transform .05s, box-shadow .05s;
+    }
+    .px-btn:hover:not(:disabled) { filter: brightness(1.15); }
+    .px-btn:active:not(:disabled) {
+        transform: translateY(4px);
+        box-shadow: inset -3px -3px 0 #00000044, inset 3px 3px 0 #ffffff22, 0 0 0 var(--ink);
+    }
+    .px-btn:disabled { opacity: .35; cursor: not-allowed; }
+
+    .btn-seed   { background: #6e8f3e; }
+    .btn-coffee { background: var(--coffee); }
+    .btn-choco  { background: var(--choco); }
+    .hidden { display: none; }
+
+    .screen-wrap { position: relative; }
+    .ending-text {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 12px;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 1.2s;
+    }
+    .ending-text.show { opacity: 1; }
+    .ending-text p {
+        font-size: 10px;
+        color: var(--cream);
+        text-shadow: 2px 2px 0 #000;
+        letter-spacing: 1px;
+        opacity: 0;
+        transform: translateY(6px);
+        transition: opacity .9s, transform .9s;
+    }
+    .ending-text.show p { opacity: 1; transform: none; }
+    .ending-text.show p:nth-child(1) { transition-delay: .3s; }
+    .ending-text.show p:nth-child(2) { transition-delay: 1.3s; }
+    .ending-text.show p:nth-child(3) { transition-delay: 2.3s; }
+    .ending-sub {
+        font-size: 7px;
+        color: #c9a227;
+        letter-spacing: 2px;
+        margin-top: 4px;
+        opacity: 0;
+        transition: opacity .9s;
+    }
+    .ending-text.show .ending-sub { opacity: 1; transition-delay: 3.4s; }
+
+    .stage-text {
+        margin-top: 10px;
+        font-size: 8px;
+        color: #8fd0ff;
+        letter-spacing: 1px;
+    }
+</style>
 </head>
-
 <body>
 
-<div class="container">
+<div class="game-frame">
+    <h1>PIXEL GARDEN</h1>
+    <div class="subtitle">像 素 花 园 · 种 出 一 朵 蓝 色 的 花</div>
 
-    <h1>这是一个给你的小游戏</h1>
+    <div class="screen-wrap">
+        <canvas id="game" width="160" height="150"></canvas>
+        <div class="ending-text" id="ending-text">
+            <p>这个小游戏还没有结局</p>
+            <p>因为后面的剧情</p>
+            <p>我想和你一起慢慢更新</p>
+            <span class="ending-sub">— 未完待续 —</span>
+        </div>
+    </div>
 
-    <button onclick="startGame()">
-        开始
-    </button>
+    <div class="hud">
+        <div class="hud-label">
+            <span>成长值 GROWTH</span>
+            <span id="growth-num">0 / 100</span>
+        </div>
+        <div class="bar"><div class="bar-fill" id="bar-fill"></div></div>
+    </div>
 
+    <div class="message" id="message">> 欢迎来到像素花园！点击「播种」开始吧。</div>
+
+    <div class="controls">
+        <button class="px-btn btn-seed" id="btn-seed">播 种</button>
+        <button class="px-btn btn-coffee" id="btn-coffee" disabled>浇咖啡</button>
+        <button class="px-btn btn-choco" id="btn-choco" disabled>撒巧克力粉</button>
+    </div>
+
+    <div class="stage-text" id="stage-text">STAGE: 空地</div>
 </div>
 
 <script>
-function startGame() {
-    alert("游戏开始");
-}
+(function () {
+    "use strict";
+
+    // ---------- 背景星星 ----------
+    for (let i = 0; i < 40; i++) {
+        const s = document.createElement("div");
+        s.className = "bg-star";
+        s.style.left = Math.random() * 100 + "vw";
+        s.style.top = Math.random() * 100 + "vh";
+        s.style.animationDelay = Math.random() * 3 + "s";
+        document.body.appendChild(s);
+    }
+
+    // ---------- DOM ----------
+    const cv = document.getElementById("game");
+    const ctx = cv.getContext("2d");
+    const msgEl = document.getElementById("message");
+    const barFill = document.getElementById("bar-fill");
+    const growthNum = document.getElementById("growth-num");
+    const stageText = document.getElementById("stage-text");
+    const btnSeed = document.getElementById("btn-seed");
+    const btnCoffee = document.getElementById("btn-coffee");
+    const btnChoco = document.getElementById("btn-choco");
+    const endingEl = document.getElementById("ending-text");
+
+    const W = cv.width, H = cv.height;
+    const GROUND_Y = 112;
+    const PLANT_X = 80, BASE_Y = GROUND_Y;
+
+    // ---------- 游戏状态 ----------
+    let growth = 0;          // 0 - 100
+    let planted = false;
+    let bloomed = false;
+    let particles = [];
+    let sparkles = [];
+    let cupTimer = 0;   // 咖啡杯显示计时
+    let mouse = { active: false, x: -20 };   // 小老鼠彩蛋
+    let mouseSeen = false;
+    let finale = { active: false, t: 0, flowers: [], curtain: 0, ended: false };
+    let tick = 0;
+
+    const STAGES = ["空地", "种子", "发芽", "幼苗", "长叶", "花苞", "盛开!"];
+    function stageIndex() {
+        if (!planted) return 0;
+        if (growth < 15) return 1;
+        if (growth < 35) return 2;
+        if (growth < 55) return 3;
+        if (growth < 75) return 4;
+        if (growth < 100) return 5;
+        return 6;
+    }
+
+    // ---------- 像素绘制工具 ----------
+    function px(x, y, w, h, c) {
+        ctx.fillStyle = c;
+        ctx.fillRect(Math.round(x), Math.round(y), w, h);
+    }
+
+    // ---------- 场景绘制 ----------
+    function drawSky() {
+        // 天空渐变（分层色带模拟像素渐变）
+        const bands = ["#16233c", "#1a2a46", "#1f3150", "#243a5c", "#2a4468"];
+        const bh = GROUND_Y / bands.length;
+        bands.forEach((c, i) => px(0, i * bh, W, bh + 1, c));
+        // 星星
+        for (let i = 0; i < 18; i++) {
+            const sx = (i * 37 + 13) % W;
+            const sy = (i * 23 + 7) % (GROUND_Y - 20);
+            const on = ((tick >> 4) + i) % 3 !== 0;
+            px(sx, sy, 1, 1, on ? "#cfe6ff" : "#4a5f85");
+        }
+        // 月亮（像素圆形 + 陨石坑）
+        const mx = 130, my = 8;
+        const moonRows = [6, 10, 12, 12, 14, 14, 14, 14, 14, 14, 12, 12, 10, 6];
+        moonRows.forEach((w, i) => {
+            px(mx + (14 - w) / 2, my + i, w, 1, "#f2e8bb");
+        });
+        // 高光与陨石坑
+        px(mx + 3, my + 3, 3, 3, "#fff5d0");
+        px(mx + 9, my + 4, 3, 3, "#c9bd88");
+        px(mx + 4, my + 9, 2, 2, "#c9bd88");
+        px(mx + 10, my + 10, 2, 2, "#c9bd88");
+    }
+
+    function drawGround() {
+        px(0, GROUND_Y, W, H - GROUND_Y, "#4a3520");
+        px(0, GROUND_Y, W, 3, "#5d8a3c");
+        // 草地像素
+        for (let i = 0; i < 26; i++) {
+            const gx = (i * 29 + 5) % W;
+            px(gx, GROUND_Y - 1 - (i % 2), 1, 2, "#6fa04a");
+        }
+        // 土壤颗粒
+        for (let i = 0; i < 30; i++) {
+            const dx = (i * 41 + 9) % W;
+            const dy = GROUND_Y + 5 + (i * 13) % (H - GROUND_Y - 8);
+            px(dx, dy, 2, 1, "#3a2817");
+        }
+    }
+
+    function drawMound() {
+        if (!planted) return;
+        // 种下种子后的小土堆
+        px(PLANT_X - 6, GROUND_Y - 1, 12, 2, "#4a3520");
+        px(PLANT_X - 4, GROUND_Y - 2, 8, 1, "#5a422a");
+    }
+
+    // 先把杯子（不含蒸汽）画到离屏画布，方便旋转
+    const cupCanvas = document.createElement("canvas");
+    cupCanvas.width = 20;
+    cupCanvas.height = 18;
+    (function paintCup() {
+        const c2 = cupCanvas.getContext("2d");
+        function q(x, y, w, h, col) { c2.fillStyle = col; c2.fillRect(x, y, w, h); }
+        const body = "#f5f0e6", shade = "#c8c0b0";
+        // 咖啡液面
+        q(2, 0, 12, 2, "#6b4226");
+        q(3, 0, 3, 1, "#8a5a32");
+        // 杯身
+        q(2, 2, 12, 8, body);
+        q(3, 10, 10, 2, body);
+        q(11, 2, 3, 8, shade);
+        q(10, 10, 3, 2, shade);
+        // 杯把
+        q(14, 3, 3, 2, body);
+        q(16, 5, 2, 3, body);
+        q(14, 8, 3, 2, body);
+        // 托盘
+        q(0, 13, 16, 2, body);
+        q(2, 15, 12, 1, shade);
+    })();
+
+    const CUP_DURATION = 75;
+
+    function drawCup() {
+        if (cupTimer <= 0) return;
+        // 倾斜动画：先渐入到 45°，保持，最后渐出
+        const elapsed = CUP_DURATION - cupTimer;
+        let t = 1;
+        if (elapsed < 10) t = elapsed / 10;
+        else if (cupTimer < 10) t = cupTimer / 10;
+        const angle = -(Math.PI / 4) * t;   // 向左侧倾斜 45° 倒咖啡
+
+        const cx = PLANT_X + 4;
+        const cy = 34 + Math.round(Math.sin(tick / 8) * 2);
+
+        // 蒸汽（保持竖直上升，不随杯子旋转）
+        const sv = (tick >> 3) % 2;
+        const sx = cx - 9 * t, sy = cy - 9 * t - 3;
+        px(sx + sv, sy - 3, 1, 2, "#e8e8e8");
+        px(sx - 1 + sv, sy - 5, 1, 2, "#b8b8b8");
+        px(sx + sv, sy - 7, 1, 2, "#e8e8e8");
+        px(sx + 5 - sv, sy - 3, 1, 2, "#e8e8e8");
+        px(sx + 6 - sv, sy - 5, 1, 2, "#b8b8b8");
+        px(sx + 5 - sv, sy - 7, 1, 2, "#e8e8e8");
+
+        // 旋转 45° 的杯身
+        ctx.save();
+        ctx.imageSmoothingEnabled = false;
+        ctx.translate(cx, cy);
+        ctx.rotate(angle);
+        ctx.drawImage(cupCanvas, -10, -9);
+        ctx.restore();
+    }
+
+    function stemTop() {
+        // 根据成长值返回茎的高度
+        const st = stageIndex();
+        return [0, 0, 6, 16, 30, 44, 50][st];
+    }
+
+    function drawPlant() {
+        if (!planted) return;
+        const st = stageIndex();
+        const sway = st >= 3 ? Math.round(Math.sin(tick / 22) * 1.5) : 0;
+        const baseY = BASE_Y + 1;
+        const th = stemTop();
+        const topY = baseY - th;
+        const cx = PLANT_X + (st >= 3 ? sway : 0);
+
+        // 种子
+        if (st === 1) {
+            px(PLANT_X - 2, baseY - 2, 4, 3, "#8a5a32");
+            px(PLANT_X - 1, baseY - 3, 2, 1, "#a06a3e");
+            return;
+        }
+
+        // 茎
+        for (let y = 0; y < th; y += 2) {
+            const off = st >= 3 ? Math.round(Math.sin((tick + y) / 22) * (y / th) * 1.5) : 0;
+            px(PLANT_X - 1 + off, baseY - y - 2, 2, 2, "#3e7a2e");
+        }
+
+        // 叶子
+        if (st >= 3) {
+            const ly = baseY - Math.floor(th * 0.5);
+            px(cx - 6, ly, 5, 2, "#4e943a");
+            px(cx - 5, ly - 1, 3, 1, "#4e943a");
+            px(cx + 1, ly + 4, 5, 2, "#4e943a");
+            px(cx + 2, ly + 3, 3, 1, "#4e943a");
+        }
+        if (st >= 4) {
+            const ly2 = baseY - Math.floor(th * 0.75);
+            px(cx + 1, ly2, 6, 2, "#5aa344");
+            px(cx + 2, ly2 - 1, 4, 1, "#5aa344");
+        }
+
+        // 发芽的小叶
+        if (st === 2) {
+            px(PLANT_X - 4, topY - 1, 3, 2, "#5aa344");
+            px(PLANT_X + 1, topY - 1, 3, 2, "#5aa344");
+        }
+
+        // 花苞
+        if (st === 5) {
+            px(cx - 2, topY - 5, 5, 5, "#3e6ea8");
+            px(cx - 1, topY - 6, 3, 1, "#5aa9e6");
+            px(cx - 2, topY, 5, 1, "#3e7a2e");
+        }
+
+        // 盛开的蓝花
+        if (st === 6) {
+            const cy = topY - 5;
+            // 花瓣（深蓝外层 + 亮蓝内层）
+            const petals = [
+                [0, -7], [5, -5], [7, 0], [5, 5],
+                [0, 7], [-5, 5], [-7, 0], [-5, -5]
+            ];
+            petals.forEach(([ox, oy], i) => {
+                const bob = Math.round(Math.sin(tick / 18 + i) * 1);
+                px(cx + ox - 2, cy + oy - 2 + bob, 5, 5, "#3a6fd8");
+                px(cx + ox - 1, cy + oy - 1 + bob, 3, 3, "#5aa9e6");
+                px(cx + ox, cy + oy + bob, 1, 1, "#9fd4ff");
+            });
+            // 花心
+            px(cx - 2, cy - 2, 5, 5, "#f2c94c");
+            px(cx - 1, cy - 1, 3, 3, "#ffe89a");
+            // 花茎顶端
+            px(cx - 1, cy + 6, 2, 3, "#3e7a2e");
+        }
+    }
+
+    function drawMouse() {
+        if (!mouse.active) return;
+        const x = Math.round(mouse.x), y = GROUND_Y - 4;
+        const legFrame = (tick >> 2) % 2;
+        // 尾巴
+        px(x - 4, y + 1, 4, 1, "#d88a9a");
+        px(x - 5, y, 1, 1, "#d88a9a");
+        // 身体
+        px(x, y, 8, 4, "#9a9a9a");
+        px(x + 1, y - 1, 5, 1, "#b0b0b0");   // 背部高光
+        px(x + 6, y + 1, 3, 2, "#9a9a9a");   // 头
+        px(x + 5, y - 2, 2, 2, "#b8b8b8");   // 耳朵
+        px(x + 8, y + 1, 1, 1, "#1a1a1a");   // 眼睛
+        px(x + 9, y + 2, 1, 1, "#d88a9a");   // 鼻子
+        // 腿（两帧跑动动画）
+        if (legFrame === 0) {
+            px(x + 1, y + 4, 1, 2, "#7a7a7a");
+            px(x + 5, y + 4, 1, 2, "#7a7a7a");
+        } else {
+            px(x + 2, y + 4, 1, 2, "#7a7a7a");
+            px(x + 4, y + 4, 1, 2, "#7a7a7a");
+        }
+    }
+
+    function drawParticles() {
+        particles.forEach(p => {
+            px(p.x, p.y, p.size, p.size, p.color);
+        });
+        sparkles.forEach(s => {
+            const on = (tick + s.phase) % 20 < 10;
+            if (on) {
+                px(s.x, s.y, 1, 1, "#ffffff");
+                px(s.x - 1, s.y, 1, 1, "#9fd4ff");
+                px(s.x + 1, s.y, 1, 1, "#9fd4ff");
+                px(s.x, s.y - 1, 1, 1, "#9fd4ff");
+                px(s.x, s.y + 1, 1, 1, "#9fd4ff");
+            }
+        });
+    }
+
+    // ---------- 结局演出 ----------
+    function startFinale() {
+        finale.active = true;
+        // 后排：沿地面线开一排花（避开中间主花）
+        const backXs = [8, 20, 32, 44, 58, 70, 92, 104, 116, 128, 140, 152];
+        backXs.forEach((x, i) => {
+            finale.flowers.push({
+                x, y: GROUND_Y + 2,
+                maxH: 20 + Math.floor(Math.random() * 22),
+                delay: i * 7 + Math.floor(Math.random() * 6),
+                swayP: Math.random() * 10
+            });
+        });
+        // 前排：土壤里再开一层矮花，铺满屏幕
+        for (let i = 0; i < 7; i++) {
+            finale.flowers.push({
+                x: 10 + Math.floor(Math.random() * 140),
+                y: GROUND_Y + 10 + Math.floor(Math.random() * 24),
+                maxH: 8 + Math.floor(Math.random() * 8),
+                delay: 60 + i * 8 + Math.floor(Math.random() * 6),
+                swayP: Math.random() * 10
+            });
+        }
+        finale.flowers.sort((a, b) => a.y - b.y);
+        setMessage("> 花香飘散，蓝色的花朵开满了整个花园……");
+    }
+
+    function drawFinale() {
+        if (!finale.active) return;
+        finale.flowers.forEach(f => {
+            const t = finale.t - f.delay;
+            if (t <= 0) return;
+            // 茎的伸展（缓出动画）
+            const grow = Math.min(1, t / 26);
+            const h = Math.round(f.maxH * (1 - Math.pow(1 - grow, 3)));
+            const sway = Math.round(Math.sin(tick / 20 + f.swayP));
+            const x = f.x + sway;
+            for (let y = 0; y < h; y += 2) px(x - 1, f.y - y - 2, 2, 2, "#3e7a2e");
+            if (h > 8) {
+                px(x - 4, f.y - Math.floor(h / 2), 3, 2, "#4e943a");
+                px(x + 1, f.y - Math.floor(h / 2) - 3, 3, 2, "#4e943a");
+            }
+            // 花朵（从小到大伸展绽放）
+            const s = Math.min(1, Math.max(0, (t - 26) / 14));
+            if (s <= 0) return;
+            const p = Math.max(1, Math.round(2 * s));
+            const d = Math.max(1, Math.round(3 * s));
+            const cy = f.y - h - p;
+            [[0, -d], [d, 0], [0, d], [-d, 0]].forEach(([ox, oy]) => {
+                px(x + ox - p, cy + oy - p, p * 2, p * 2, "#3a6fd8");
+                px(x + ox - p + 1, cy + oy - p + 1, Math.max(1, p * 2 - 2), Math.max(1, p * 2 - 2), "#5aa9e6");
+            });
+            px(x - p, cy - p, p * 2, p * 2, "#f2c94c");
+        });
+    }
+
+    function drawCurtain() {
+        if (finale.curtain <= 0) return;
+        const ch = Math.round(finale.curtain);
+        px(0, 0, W, ch, "#1a1226");
+        px(0, H - ch, W, ch, "#1a1226");
+        px(0, ch - 2, W, 2, "#c9a227");
+        px(0, H - ch, W, 2, "#c9a227");
+    }
+
+    function render() {
+        ctx.clearRect(0, 0, W, H);
+        drawSky();
+        drawGround();
+        drawMound();
+        drawPlant();
+        drawCup();
+        drawMouse();
+        drawFinale();
+        drawParticles();
+        drawCurtain();
+    }
+
+    // ---------- 游戏循环 ----------
+    function loop() {
+        tick++;
+        // 粒子更新
+        particles.forEach(p => {
+            p.y += p.vy;
+            p.x += p.vx;
+            p.life--;
+        });
+        particles = particles.filter(p => p.life > 0 && p.y < BASE_Y + 2);
+        if (cupTimer > 0) cupTimer--;
+
+        // 小老鼠从左边跑到右边
+        if (mouse.active) {
+            mouse.x += 2.2;
+            if (mouse.x > W + 12) mouse.active = false;
+        }
+
+        // 结局演出推进
+        if (finale.active) {
+            finale.t++;
+            if (finale.t > 140 && finale.curtain < H / 2) {
+                finale.curtain = Math.min(H / 2, finale.curtain + 1.5);
+                if (finale.curtain >= H / 2 && !finale.ended) {
+                    finale.ended = true;
+                    endingEl.classList.add("show");
+                    setMessage("> 感谢游玩 · 剧情未完待续…");
+                    stageText.textContent = "STAGE: 未完待续";
+                }
+            }
+        }
+
+        // 盛开时产生星光
+        if (bloomed && tick % 30 === 0 && sparkles.length < 6) {
+            sparkles.push({
+                x: PLANT_X - 16 + Math.floor(Math.random() * 32),
+                y: BASE_Y - 60 + Math.floor(Math.random() * 30),
+                phase: Math.floor(Math.random() * 20)
+            });
+            if (sparkles.length > 6) sparkles.shift();
+        }
+
+        render();
+        requestAnimationFrame(loop);
+    }
+
+    // ---------- 交互 ----------
+    const MESSAGES = {
+        coffee: [
+            "> 你浇了一杯热咖啡，种子咕嘟咕嘟喝光了！",
+            "> 咖啡的香气让花儿精神一振！",
+            "> 浓郁的咖啡渗入土壤，很有营养！",
+            "> 花儿好像喜欢拿铁的味道~"
+        ],
+        choco: [
+            "> 你撒下香甜的巧克力粉，土壤变甜了！",
+            "> 巧克力粉慢慢融化，花儿开心地摇摆！",
+            "> 可可的香气弥漫在花园里~",
+            "> 甜甜的味道让花儿长得更快了！"
+        ]
+    };
+
+    function setMessage(t) { msgEl.textContent = t; }
+
+    function updateHUD() {
+        const g = Math.min(100, Math.round(growth));
+        barFill.style.width = g + "%";
+        growthNum.textContent = g + " / 100";
+        stageText.textContent = "STAGE: " + STAGES[stageIndex()];
+    }
+
+    function spawnWater(type) {
+        // 咖啡从杯口落下，巧克力粉从上方洒落
+        const color = type === "coffee" ? "#a0663a" : "#5a3a22";
+        const color2 = type === "coffee" ? "#c98a4e" : "#7a5230";
+        for (let i = 0; i < 24; i++) {
+            particles.push({
+                x: type === "coffee"
+                    ? PLANT_X - 6 + Math.random() * 12
+                    : PLANT_X - 14 + Math.random() * 28,
+                y: type === "coffee"
+                    ? 36 + Math.random() * 6
+                    : 20 + Math.random() * 30,
+                vx: (Math.random() - .5) * .4,
+                vy: 1 + Math.random() * 1.5,
+                size: type === "coffee" ? 2 : 1,
+                color: Math.random() > .5 ? color : color2,
+                life: 90
+            });
+        }
+    }
+
+    function feed(type) {
+        if (!planted || bloomed) return;
+        if (type === "coffee") cupTimer = CUP_DURATION;   // 显示咖啡杯
+        spawnWater(type);
+        const gain = type === "coffee" ? 16 : 12;
+        const before = stageIndex();
+        growth = Math.min(100, growth + gain + Math.random() * 4);
+        const pool = MESSAGES[type];
+        setMessage(pool[Math.floor(Math.random() * pool.length)]);
+
+        // 彩蛋：成长值首次过半，小老鼠跑过
+        if (growth >= 50 && !mouseSeen) {
+            mouseSeen = true;
+            mouse.active = true;
+            mouse.x = -12;
+            setTimeout(() => {
+                if (!bloomed) setMessage("> 咦？一只小老鼠被香味吸引，飞快地跑过去了！");
+            }, 800);
+        }
+
+        if (growth >= 100 && !bloomed) {
+            bloomed = true;
+            btnCoffee.disabled = true;
+            btnChoco.disabled = true;
+            setTimeout(() => {
+                setMessage("> 太棒了！一朵美丽的蓝色花朵盛开了！");
+            }, 600);
+            setTimeout(startFinale, 2800);
+        } else if (stageIndex() > before) {
+            setTimeout(() => {
+                if (!bloomed) setMessage("> 升级！现在处于「" + STAGES[stageIndex()] + "」阶段，继续加油！");
+            }, 700);
+        }
+        updateHUD();
+    }
+
+    btnSeed.addEventListener("click", () => {
+        if (planted) return;
+        planted = true;
+        growth = 5;
+        btnSeed.disabled = true;
+        btnCoffee.disabled = false;
+        btnChoco.disabled = false;
+        setMessage("> 种子埋进了土地里，快给它浇点咖啡或撒点巧克力粉吧！");
+        // 播种尘土
+        for (let i = 0; i < 10; i++) {
+            particles.push({
+                x: PLANT_X - 6 + Math.random() * 12,
+                y: BASE_Y - 4 - Math.random() * 6,
+                vx: (Math.random() - .5) * .6,
+                vy: .5 + Math.random(),
+                size: 1, color: "#4a3520", life: 40
+            });
+        }
+        updateHUD();
+    });
+
+    btnCoffee.addEventListener("click", () => feed("coffee"));
+    btnChoco.addEventListener("click", () => feed("choco"));
+
+    updateHUD();
+    loop();
+})();
 </script>
 
 </body>
