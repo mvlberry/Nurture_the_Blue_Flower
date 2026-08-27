@@ -3,752 +3,1992 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>像素花园 · Pixel Garden</title>
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#101827">
+<title>养育一朵蓝色的花</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Ma+Shan+Zheng&family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
     :root {
-        --ink: #241c34;
-        --panel: #342947;
-        --panel-light: #4a3a63;
-        --cream: #f2e6c9;
-        --blue: #5aa9e6;
-        --coffee: #a0663a;
-        --choco: #6b4226;
+        --night: #0b1220;
+        --night-soft: #111d2f;
+        --ink: #1e2940;
+        --paper: #f4ead5;
+        --paper-deep: #e8d9ba;
+        --paper-ink: #3c3a46;
+        --blue: #66b9ef;
+        --blue-deep: #397bb8;
+        --blue-pale: #b9e4ff;
+        --gold: #efc76a;
+        --rose: #ef9ba9;
+        --leaf: #65a46e;
+        --coffee: #9b633f;
+        --chocolate: #63402f;
+        --line: rgba(255,255,255,.13);
+        --shadow: rgba(2, 8, 18, .48);
+    }
+
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    [hidden] {
+        display: none !important;
+    }
+
+    html {
+        background: var(--night);
     }
 
     body {
         min-height: 100vh;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        background: #141020;
-        font-family: 'Press Start 2P', "Microsoft YaHei", monospace;
-        color: var(--cream);
         overflow: hidden;
+        color: #eff7ff;
+        font-family: "DotGothic16", "Microsoft YaHei", sans-serif;
+        background:
+            radial-gradient(circle at 18% 18%, rgba(68, 135, 184, .22), transparent 32%),
+            radial-gradient(circle at 82% 72%, rgba(86, 72, 132, .18), transparent 34%),
+            linear-gradient(145deg, #07101d, #121b2b 55%, #0a1321);
         user-select: none;
     }
 
-    .bg-star {
+    body::before,
+    body::after {
+        content: "";
         position: fixed;
-        width: 4px; height: 4px;
-        background: #ffffff;
-        animation: twinkle 2.5s infinite ease-in-out;
+        inset: 0;
         pointer-events: none;
-    }
-    @keyframes twinkle {
-        0%, 100% { opacity: .15; }
-        50% { opacity: .8; }
+        z-index: 20;
     }
 
-    .game-frame {
+    body::before {
+        opacity: .22;
+        background-image:
+            linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px);
+        background-size: 4px 4px;
+        mix-blend-mode: screen;
+    }
+
+    body::after {
+        opacity: .18;
+        background: repeating-linear-gradient(
+            0deg,
+            transparent 0 3px,
+            rgba(0,0,0,.18) 3px 4px
+        );
+    }
+
+    button {
+        font: inherit;
+    }
+
+    button:focus-visible,
+    canvas:focus-visible {
+        outline: 3px solid var(--gold);
+        outline-offset: 3px;
+    }
+
+    .app-shell {
         position: relative;
-        width: 460px;
-        max-width: 94vw;
-        background: var(--panel);
-        border: 4px solid var(--ink);
+        z-index: 2;
+        width: min(1460px, calc(100vw - 30px));
+        height: min(900px, calc(100vh - 30px));
+        min-height: 650px;
+        margin: 15px auto;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        gap: 12px;
+    }
+
+    .topbar {
+        min-height: 66px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        padding: 10px 18px;
+        background: rgba(15, 26, 42, .86);
+        border: 1px solid var(--line);
+        box-shadow: 0 16px 50px var(--shadow);
+        backdrop-filter: blur(12px);
+    }
+
+    .brand {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    .brand-mark {
+        position: relative;
+        flex: 0 0 auto;
+        width: 38px;
+        height: 38px;
+        display: grid;
+        place-items: center;
+        color: var(--gold);
+        border: 1px solid rgba(239, 199, 106, .55);
+        background: rgba(239, 199, 106, .08);
+        transform: rotate(45deg);
+    }
+
+    .brand-mark span {
+        transform: rotate(-45deg);
+        font-family: "Silkscreen", monospace;
+        font-size: 18px;
+    }
+
+    .brand-copy {
+        min-width: 0;
+    }
+
+    .brand-copy h1 {
+        color: var(--blue-pale);
+        font-family: "Silkscreen", "DotGothic16", monospace;
+        font-size: clamp(15px, 1.6vw, 22px);
+        letter-spacing: .08em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .brand-copy p {
+        margin-top: 3px;
+        color: #91a9c3;
+        font-size: 12px;
+        letter-spacing: .16em;
+    }
+
+    .top-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex: 0 0 auto;
+    }
+
+    .chapter-chip {
+        padding: 8px 12px;
+        color: var(--gold);
+        font-family: "Silkscreen", monospace;
+        font-size: 10px;
+        letter-spacing: .08em;
+        border: 1px solid rgba(239, 199, 106, .3);
+        background: rgba(239, 199, 106, .06);
+        white-space: nowrap;
+    }
+
+    .icon-button {
+        min-width: 40px;
+        min-height: 40px;
+        padding: 0 11px;
+        color: #b8cce0;
+        cursor: pointer;
+        border: 1px solid var(--line);
+        background: #142238;
+        box-shadow: inset 0 -3px rgba(0,0,0,.18);
+        transition: color .18s, border-color .18s, transform .18s;
+    }
+
+    .icon-button:hover {
+        color: #fff;
+        border-color: rgba(102,185,239,.55);
+        transform: translateY(-1px);
+    }
+
+    .story-layout {
+        min-height: 0;
+        display: grid;
+        grid-template-columns: minmax(520px, 1.72fr) minmax(310px, .82fr);
+        gap: 12px;
+    }
+
+    .scene-panel,
+    .letter-panel {
+        position: relative;
+        min-width: 0;
+        min-height: 0;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        box-shadow: 0 22px 70px var(--shadow);
+    }
+
+    .scene-panel {
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        padding: 12px;
+        background: rgba(9, 18, 31, .88);
+    }
+
+    .panel-label {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        min-height: 34px;
+        padding: 0 4px 9px;
+        color: #7f98b2;
+        font-family: "Silkscreen", "DotGothic16", monospace;
+        font-size: 10px;
+        letter-spacing: .09em;
+    }
+
+    .panel-label strong {
+        color: var(--blue-pale);
+        font-weight: 400;
+    }
+
+    .scene-frame {
+        position: relative;
+        min-height: 0;
+        overflow: hidden;
+        display: grid;
+        place-items: center;
+        border: 2px solid #263851;
+        background: #091321;
         box-shadow:
-            0 0 0 4px var(--panel-light),
-            0 0 0 8px var(--ink),
-            12px 12px 0 8px rgba(0,0,0,.45);
-        padding: 18px;
-        text-align: center;
+            inset 0 0 0 3px #07101c,
+            inset 0 0 45px rgba(0,0,0,.4);
     }
 
-    h1 {
-        font-size: 15px;
-        letter-spacing: 2px;
-        color: var(--blue);
-        text-shadow: 2px 2px 0 var(--ink);
-        margin-bottom: 4px;
-    }
-    .subtitle {
-        font-size: 8px;
-        color: #b9a8d8;
-        margin-bottom: 14px;
-        letter-spacing: 1px;
+    .scene-frame::before {
+        content: "";
+        position: absolute;
+        inset: 8px;
+        z-index: 3;
+        pointer-events: none;
+        border: 1px solid rgba(185,228,255,.11);
     }
 
-    .screen-wrap {
-        border: 4px solid var(--ink);
-        box-shadow: inset 0 0 0 2px #00000055;
-        background: #1a2438;
-        line-height: 0;
-    }
     canvas {
+        display: block;
         width: 100%;
+        height: 100%;
+        min-height: 0;
         image-rendering: pixelated;
         image-rendering: crisp-edges;
+        cursor: crosshair;
+        touch-action: none;
     }
 
-    .hud {
-        margin-top: 14px;
-        text-align: left;
-    }
-    .hud-label {
-        font-size: 8px;
-        color: #b9a8d8;
-        margin-bottom: 6px;
-        display: flex;
-        justify-content: space-between;
-    }
-    .bar {
-        height: 16px;
-        border: 3px solid var(--ink);
-        background: #1c1626;
-        padding: 2px;
-    }
-    .bar-fill {
-        height: 100%;
-        width: 0%;
-        background: repeating-linear-gradient(
-            90deg,
-            var(--blue) 0 8px,
-            #7cc0f2 8px 16px
-        );
-        transition: width .5s steps(8);
-    }
-
-    .message {
-        margin-top: 12px;
-        min-height: 30px;
-        font-size: 9px;
-        line-height: 1.7;
-        color: var(--cream);
-        background: #241c34;
-        border: 3px solid var(--ink);
-        padding: 8px 10px;
-        text-align: left;
-    }
-
-    .controls {
-        margin-top: 14px;
-        display: flex;
-        gap: 10px;
-        justify-content: center;
-    }
-
-    .px-btn {
-        font-family: inherit;
-        font-size: 9px;
-        padding: 12px 14px;
-        cursor: pointer;
-        color: var(--cream);
-        background: var(--panel-light);
-        border: 3px solid var(--ink);
-        box-shadow: inset -3px -3px 0 #00000044, inset 3px 3px 0 #ffffff22, 0 4px 0 var(--ink);
-        transition: transform .05s, box-shadow .05s;
-    }
-    .px-btn:hover:not(:disabled) { filter: brightness(1.15); }
-    .px-btn:active:not(:disabled) {
-        transform: translateY(4px);
-        box-shadow: inset -3px -3px 0 #00000044, inset 3px 3px 0 #ffffff22, 0 0 0 var(--ink);
-    }
-    .px-btn:disabled { opacity: .35; cursor: not-allowed; }
-
-    .btn-seed   { background: #6e8f3e; }
-    .btn-coffee { background: var(--coffee); }
-    .btn-choco  { background: var(--choco); }
-    .hidden { display: none; }
-
-    .screen-wrap { position: relative; }
-    .ending-text {
+    .scene-toast {
         position: absolute;
-        inset: 0;
+        z-index: 5;
+        left: 50%;
+        bottom: 20px;
+        width: min(86%, 610px);
+        padding: 10px 16px;
+        color: #edf8ff;
+        text-align: center;
+        font-size: 13px;
+        line-height: 1.55;
+        border: 1px solid rgba(185,228,255,.28);
+        background: rgba(6, 14, 25, .84);
+        box-shadow: 0 8px 30px rgba(0,0,0,.3);
+        transform: translate(-50%, 16px);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity .25s, transform .25s;
+    }
+
+    .scene-toast.show {
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
+
+    .scene-caption {
+        min-height: 42px;
         display: flex;
-        flex-direction: column;
-        justify-content: center;
         align-items: center;
         gap: 12px;
-        pointer-events: none;
-        opacity: 0;
-        transition: opacity 1.2s;
+        padding: 10px 6px 0;
+        color: #9bb1c7;
+        font-size: 12px;
+        line-height: 1.5;
     }
-    .ending-text.show { opacity: 1; }
-    .ending-text p {
-        font-size: 10px;
-        color: var(--cream);
-        text-shadow: 2px 2px 0 #000;
-        letter-spacing: 1px;
-        opacity: 0;
-        transform: translateY(6px);
-        transition: opacity .9s, transform .9s;
-    }
-    .ending-text.show p { opacity: 1; transform: none; }
-    .ending-text.show p:nth-child(1) { transition-delay: .3s; }
-    .ending-text.show p:nth-child(2) { transition-delay: 1.3s; }
-    .ending-text.show p:nth-child(3) { transition-delay: 2.3s; }
-    .ending-sub {
-        font-size: 7px;
-        color: #c9a227;
-        letter-spacing: 2px;
-        margin-top: 4px;
-        opacity: 0;
-        transition: opacity .9s;
-    }
-    .ending-text.show .ending-sub { opacity: 1; transition-delay: 3.4s; }
 
-    .stage-text {
-        margin-top: 10px;
-        font-size: 8px;
-        color: #8fd0ff;
-        letter-spacing: 1px;
+    .caption-dot {
+        flex: 0 0 auto;
+        width: 8px;
+        height: 8px;
+        background: var(--blue);
+        box-shadow: 0 0 16px var(--blue);
+        transform: rotate(45deg);
+        animation: softPulse 2s infinite;
+    }
+
+    .letter-panel {
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        color: var(--paper-ink);
+        background:
+            linear-gradient(90deg, rgba(135,93,54,.05) 1px, transparent 1px),
+            linear-gradient(var(--paper), #efe2c8);
+        background-size: 22px 22px, auto;
+    }
+
+    .letter-panel::before {
+        content: "";
+        position: absolute;
+        inset: 10px;
+        pointer-events: none;
+        border: 1px solid rgba(95, 66, 43, .17);
+    }
+
+    .letter-head {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 24px 26px 14px;
+        border-bottom: 1px dashed rgba(95, 66, 43, .24);
+    }
+
+    .chapter-kicker {
+        color: #8d6b4f;
+        font-family: "Silkscreen", "DotGothic16", monospace;
+        font-size: 9px;
+        letter-spacing: .11em;
+        text-transform: uppercase;
+    }
+
+    .letter-head h2 {
+        margin-top: 7px;
+        color: #2f4057;
+        font-family: "Ma Shan Zheng", "DotGothic16", cursive;
+        font-size: clamp(28px, 3vw, 42px);
+        font-weight: 400;
+        line-height: 1;
+    }
+
+    .wax-seal {
+        flex: 0 0 auto;
+        width: 48px;
+        height: 48px;
+        display: grid;
+        place-items: center;
+        color: #fff5ef;
+        font-family: "Ma Shan Zheng", cursive;
+        font-size: 20px;
+        border-radius: 50%;
+        background: #b75d67;
+        box-shadow:
+            inset 0 0 0 3px rgba(255,255,255,.15),
+            0 3px 0 #8d414a,
+            0 8px 20px rgba(105,48,56,.25);
+        transform: rotate(-8deg);
+    }
+
+    .letter-body {
+        position: relative;
+        z-index: 1;
+        min-height: 0;
+        overflow-y: auto;
+        padding: 22px 26px;
+        scrollbar-width: thin;
+        scrollbar-color: #b69772 transparent;
+    }
+
+    .story-copy {
+        color: #4c4a53;
+        font-size: clamp(14px, 1.25vw, 17px);
+        line-height: 2;
+        letter-spacing: .035em;
+    }
+
+    .story-copy p + p {
+        margin-top: 12px;
+    }
+
+    .objective-box {
+        margin-top: 18px;
+        padding: 13px 14px;
+        color: #536174;
+        font-size: 13px;
+        line-height: 1.7;
+        border-left: 3px solid var(--blue-deep);
+        background: rgba(83, 119, 153, .08);
+    }
+
+    .objective-box strong {
+        display: block;
+        margin-bottom: 3px;
+        color: #2f557a;
+        font-family: "Silkscreen", "DotGothic16", monospace;
+        font-size: 9px;
+        letter-spacing: .08em;
+    }
+
+    .interaction-area {
+        display: grid;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .story-button,
+    .choice-button,
+    .switch-key {
+        position: relative;
+        min-height: 48px;
+        padding: 12px 16px;
+        color: #f6fbff;
+        cursor: pointer;
+        border: 1px solid #284c6b;
+        background: #315f85;
+        box-shadow:
+            inset 0 -4px rgba(0,0,0,.14),
+            0 4px 0 #203d58;
+        transition: transform .12s, filter .12s, box-shadow .12s;
+    }
+
+    .story-button:hover,
+    .choice-button:hover,
+    .switch-key:hover {
+        filter: brightness(1.08);
+        transform: translateY(-1px);
+    }
+
+    .story-button:active,
+    .choice-button:active,
+    .switch-key:active {
+        transform: translateY(3px);
+        box-shadow: inset 0 -1px rgba(0,0,0,.15), 0 1px 0 #203d58;
+    }
+
+    .story-button.secondary {
+        color: #526171;
+        border-color: rgba(76,74,83,.25);
+        background: rgba(255,255,255,.28);
+        box-shadow: inset 0 -3px rgba(80,60,40,.07), 0 3px 0 rgba(100,77,50,.16);
+    }
+
+    .choice-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+
+    .choice-button {
+        min-height: 76px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        gap: 5px;
+        text-align: left;
+    }
+
+    .choice-button.coffee {
+        border-color: #6f4632;
+        background: var(--coffee);
+        box-shadow: inset 0 -4px rgba(0,0,0,.15), 0 4px 0 #5e3b2b;
+    }
+
+    .choice-button.chocolate {
+        border-color: #493026;
+        background: var(--chocolate);
+        box-shadow: inset 0 -4px rgba(0,0,0,.15), 0 4px 0 #422a21;
+    }
+
+    .choice-button span {
+        color: rgba(255,255,255,.72);
+        font-size: 11px;
+    }
+
+    .found-list {
+        display: grid;
+        gap: 8px;
+        margin-top: 18px;
+    }
+
+    .found-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 38px;
+        padding: 7px 10px;
+        color: #7b756e;
+        font-size: 12px;
+        border: 1px dashed rgba(82,70,60,.2);
+        background: rgba(255,255,255,.16);
+    }
+
+    .found-row.found {
+        color: #385d56;
+        border-style: solid;
+        border-color: rgba(61,115,100,.28);
+        background: rgba(100,166,130,.1);
+    }
+
+    .found-icon {
+        width: 22px;
+        text-align: center;
+        filter: grayscale(1);
+        opacity: .34;
+    }
+
+    .found-row.found .found-icon {
+        filter: none;
+        opacity: 1;
+    }
+
+    .switch-controls {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .switch-key {
+        min-height: 72px;
+        font-family: "Silkscreen", "DotGothic16", monospace;
+        font-size: 16px;
+    }
+
+    .switch-key.left {
+        background: #c95f6e;
+        border-color: #9c4450;
+        box-shadow: inset 0 -5px rgba(0,0,0,.13), 0 5px 0 #8e3e48;
+    }
+
+    .switch-key.right {
+        background: #4ca5b4;
+        border-color: #347c88;
+        box-shadow: inset 0 -5px rgba(0,0,0,.13), 0 5px 0 #2e707b;
+    }
+
+    .switch-score {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        margin-top: 13px;
+        color: #756757;
+        font-family: "Silkscreen", "DotGothic16", monospace;
+        font-size: 10px;
+    }
+
+    .letter-foot {
+        position: relative;
+        z-index: 1;
+        padding: 14px 26px 22px;
+        border-top: 1px dashed rgba(95, 66, 43, .24);
+    }
+
+    .memory-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        color: #8d6b4f;
+        font-family: "Silkscreen", "DotGothic16", monospace;
+        font-size: 9px;
+        letter-spacing: .08em;
+    }
+
+    .memory-shelf {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 7px;
+    }
+
+    .memory-item {
+        aspect-ratio: 1;
+        display: grid;
+        place-items: center;
+        color: #9a8f80;
+        font-size: 18px;
+        border: 1px dashed rgba(95,66,43,.22);
+        background: rgba(255,255,255,.17);
+    }
+
+    .memory-item.unlocked {
+        color: #2f557a;
+        border-style: solid;
+        border-color: rgba(57,123,184,.28);
+        background: rgba(102,185,239,.12);
+        animation: memoryArrive .45s both;
+    }
+
+    .chapter-trail {
+        min-height: 58px;
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 4px;
+        padding: 8px 12px;
+        border: 1px solid var(--line);
+        background: rgba(15, 26, 42, .86);
+        box-shadow: 0 16px 50px var(--shadow);
+    }
+
+    .trail-step {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-width: 0;
+        color: #587087;
+        font-size: 10px;
+        letter-spacing: .04em;
+    }
+
+    .trail-step:not(:last-child)::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: calc(50% + 22px);
+        width: calc(100% - 44px);
+        height: 1px;
+        background: #263950;
+    }
+
+    .trail-petal {
+        position: relative;
+        z-index: 1;
+        width: 16px;
+        height: 16px;
+        flex: 0 0 auto;
+        border: 1px solid #40566d;
+        background: #17263a;
+        transform: rotate(45deg);
+        transition: background .3s, box-shadow .3s, border-color .3s;
+    }
+
+    .trail-step.done,
+    .trail-step.active {
+        color: #b9d4e9;
+    }
+
+    .trail-step.done .trail-petal {
+        border-color: #4e87b2;
+        background: #397bb8;
+    }
+
+    .trail-step.active .trail-petal {
+        border-color: var(--blue-pale);
+        background: var(--blue);
+        box-shadow: 0 0 18px rgba(102,185,239,.7);
+        animation: softPulse 1.5s infinite;
+    }
+
+    .confession-card {
+        margin-top: 18px;
+        padding: 22px 18px;
+        text-align: center;
+        color: #3f4653;
+        border: 1px solid rgba(78,104,128,.22);
+        background: rgba(255,255,255,.28);
+    }
+
+    .confession-card .flower-glyph {
+        display: block;
+        margin-bottom: 10px;
+        color: var(--blue-deep);
+        font-size: 30px;
+    }
+
+    .confession-card p {
+        font-family: "Ma Shan Zheng", "DotGothic16", cursive;
+        font-size: 25px;
+        line-height: 1.75;
+    }
+
+    .tiny-note {
+        margin-top: 14px;
+        color: #8c8176;
+        font-size: 11px;
+        line-height: 1.6;
+    }
+
+    @keyframes softPulse {
+        0%, 100% { opacity: .7; transform: rotate(45deg) scale(.92); }
+        50% { opacity: 1; transform: rotate(45deg) scale(1.08); }
+    }
+
+    @keyframes memoryArrive {
+        from { opacity: 0; transform: translateY(8px) rotate(-5deg); }
+        to { opacity: 1; transform: none; }
+    }
+
+    @media (max-height: 760px) and (min-width: 821px) {
+        .app-shell {
+            min-height: 610px;
+            gap: 8px;
+            margin-block: 8px;
+            height: calc(100vh - 16px);
+        }
+        .topbar { min-height: 56px; padding-block: 7px; }
+        .brand-mark { width: 32px; height: 32px; }
+        .letter-head { padding: 17px 21px 11px; }
+        .letter-body { padding: 15px 21px; }
+        .letter-foot { padding: 10px 21px 14px; }
+        .story-copy { font-size: 14px; line-height: 1.7; }
+        .objective-box { margin-top: 12px; padding-block: 9px; }
+        .interaction-area { margin-top: 13px; gap: 7px; }
+        .choice-button { min-height: 60px; }
+        .chapter-trail { min-height: 50px; }
+    }
+
+    @media (max-width: 820px) {
+        body {
+            overflow: auto;
+        }
+        .app-shell {
+            width: calc(100% - 18px);
+            max-width: 720px;
+            height: auto;
+            min-height: 0;
+            margin: 9px auto 22px;
+            grid-template-columns: minmax(0, 1fr);
+        }
+        .topbar {
+            min-height: 58px;
+            padding: 9px 11px;
+            min-width: 0;
+            overflow: hidden;
+        }
+        .brand-mark,
+        .chapter-chip {
+            display: none;
+        }
+        .brand-copy h1 {
+            font-size: 14px;
+        }
+        .brand-copy p {
+            font-size: 10px;
+            letter-spacing: .08em;
+        }
+        .icon-button {
+            min-width: 36px;
+            min-height: 36px;
+            padding-inline: 8px;
+            font-size: 11px;
+        }
+        .story-layout {
+            display: grid;
+            width: 100%;
+            min-width: 0;
+            grid-template-columns: minmax(0, 1fr);
+        }
+        .scene-panel {
+            min-height: 420px;
+        }
+        .scene-frame {
+            aspect-ratio: 1.46;
+        }
+        .letter-panel {
+            min-height: 540px;
+        }
+        .chapter-trail {
+            grid-template-columns: repeat(7, minmax(34px, 1fr));
+            overflow-x: auto;
+        }
+        .trail-step span:last-child {
+            display: none;
+        }
+        .trail-step:not(:last-child)::after {
+            left: calc(50% + 13px);
+            width: calc(100% - 26px);
+        }
+    }
+
+    @media (max-width: 430px) {
+        .scene-panel { min-height: 340px; padding: 8px; }
+        .scene-caption { font-size: 11px; }
+        .letter-head { padding: 20px 20px 12px; }
+        .letter-body { padding: 18px 20px; }
+        .letter-foot { padding: 12px 20px 18px; }
+        .choice-grid { grid-template-columns: 1fr; }
+        .letter-panel { min-height: 570px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+            scroll-behavior: auto !important;
+            animation-duration: .01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: .01ms !important;
+        }
     }
 </style>
 </head>
 <body>
-
-<div class="game-frame">
-    <h1>PIXEL GARDEN</h1>
-    <div class="subtitle">像 素 花 园 · 种 出 一 朵 蓝 色 的 花</div>
-
-    <div class="screen-wrap">
-        <canvas id="game" width="160" height="150"></canvas>
-        <div class="ending-text" id="ending-text">
-            <p>这个小游戏还没有结局</p>
-            <p>因为后面的剧情</p>
-            <p>我想和你一起慢慢更新</p>
-            <span class="ending-sub">— 未完待续 —</span>
+<main class="app-shell">
+    <header class="topbar">
+        <div class="brand">
+            <div class="brand-mark" aria-hidden="true"><span>✦</span></div>
+            <div class="brand-copy">
+                <h1>NURTURE THE BLUE FLOWER</h1>
+                <p>养育一朵蓝色的花 · 一封慢慢打开的信</p>
+            </div>
         </div>
-    </div>
-
-    <div class="hud">
-        <div class="hud-label">
-            <span>成长值 GROWTH</span>
-            <span id="growth-num">0 / 100</span>
+        <div class="top-actions">
+            <span class="chapter-chip" id="chapter-chip">CHAPTER 00 / 06</span>
+            <button class="icon-button" id="audio-button" type="button" aria-label="开启声音" title="声音">♫ OFF</button>
+            <button class="icon-button" id="reset-button" type="button" title="清除进度并从头开始">从头再来</button>
         </div>
-        <div class="bar"><div class="bar-fill" id="bar-fill"></div></div>
-    </div>
+    </header>
 
-    <div class="message" id="message">> 欢迎来到像素花园！点击「播种」开始吧。</div>
+    <section class="story-layout">
+        <section class="scene-panel" aria-label="像素剧情舞台">
+            <div class="panel-label">
+                <span>MEMORY WINDOW // 记忆窗口</span>
+                <strong id="scene-status">等待故事开始</strong>
+            </div>
+            <div class="scene-frame" id="scene-frame">
+                <canvas id="scene" width="720" height="460" tabindex="0" aria-label="可互动的像素剧情场景"></canvas>
+                <div class="scene-toast" id="scene-toast" aria-live="polite"></div>
+            </div>
+            <div class="scene-caption">
+                <span class="caption-dot" aria-hidden="true"></span>
+                <span id="scene-caption">有些话，需要先从一颗种子开始。</span>
+            </div>
+        </section>
 
-    <div class="controls">
-        <button class="px-btn btn-seed" id="btn-seed">播 种</button>
-        <button class="px-btn btn-coffee" id="btn-coffee" disabled>浇咖啡</button>
-        <button class="px-btn btn-choco" id="btn-choco" disabled>撒巧克力粉</button>
-    </div>
+        <aside class="letter-panel" aria-label="故事信笺">
+            <header class="letter-head">
+                <div>
+                    <div class="chapter-kicker" id="chapter-kicker">PROLOGUE · 序章</div>
+                    <h2 id="chapter-title">没有名字的种子</h2>
+                </div>
+                <div class="wax-seal" aria-hidden="true">蓝</div>
+            </header>
 
-    <div class="stage-text" id="stage-text">STAGE: 空地</div>
-</div>
+            <div class="letter-body">
+                <div class="story-copy" id="story-copy" aria-live="polite"></div>
+                <div class="objective-box" id="objective-box">
+                    <strong>YOUR LITTLE MISSION</strong>
+                    <span id="objective-text"></span>
+                </div>
+                <div class="interaction-area" id="interaction-area"></div>
+            </div>
+
+            <footer class="letter-foot">
+                <div class="memory-title">
+                    <span>COLLECTED MEMORIES</span>
+                    <span id="memory-count">0 / 5</span>
+                </div>
+                <div class="memory-shelf" id="memory-shelf" aria-label="收集到的回忆"></div>
+            </footer>
+        </aside>
+    </section>
+
+    <nav class="chapter-trail" id="chapter-trail" aria-label="故事章节"></nav>
+</main>
 
 <script>
 (function () {
     "use strict";
 
-    // ---------- 背景星星 ----------
-    for (let i = 0; i < 40; i++) {
-        const s = document.createElement("div");
-        s.className = "bg-star";
-        s.style.left = Math.random() * 100 + "vw";
-        s.style.top = Math.random() * 100 + "vh";
-        s.style.animationDelay = Math.random() * 3 + "s";
-        document.body.appendChild(s);
-    }
+    /*
+     * 最终告白文字：以后只需要修改下面这一句。
+     * 这里先保留为可以直接展示、也方便替换的收尾。
+     */
+    const FINAL_CONFESSION = "故事写到这里，剩下最重要的话，我想亲口告诉你。";
+    const STORAGE_KEY = "blueFlowerConfessionV1";
+    const CHAPTERS = ["prologue", "seed", "restaurant", "switch", "meteor", "bloom", "confession"];
 
-    // ---------- DOM ----------
-    const cv = document.getElementById("game");
+    const CHAPTER_META = {
+        prologue: {
+            kicker: "PROLOGUE · 序章",
+            title: "没有名字的种子",
+            status: "夜色中的花园",
+            caption: "有些话，需要先从一颗种子开始。",
+            objective: "走进花园，听听这颗种子藏着什么。",
+            paragraphs: [
+                "很久以前，有人把一段没说出口的话，藏进了一颗小小的种子里。",
+                "它一直在等待一个刚刚好的人，亲手让故事开始。"
+            ]
+        },
+        seed: {
+            kicker: "CHAPTER 01 · 播种",
+            title: "把故事种下",
+            status: "等待第一次照料",
+            caption: "拖动种子放进花盆，也可以使用右侧按钮。",
+            objective: "把种子放进花盆，再选择她喜欢的味道。",
+            paragraphs: [
+                "种子不会告诉你它会开出怎样的花。",
+                "但被认真记住的喜好，会成为它最温柔的养分。"
+            ]
+        },
+        restaurant: {
+            kicker: "CHAPTER 02 · 初见",
+            title: "那间茶餐厅",
+            status: "第一次认识的地方",
+            caption: "场景里有三件微微发光的东西，点击找出它们。",
+            objective: "在茶餐厅里找齐菜单、饮料和对面的座位。",
+            paragraphs: [
+                "故事没有盛大的开场，只是一间茶餐厅，两个原本还不熟悉的人。",
+                "后来回想起来，那一天普通得刚刚好。"
+            ]
+        },
+        switch: {
+            kicker: "CHAPTER 03 · 并肩",
+            title: "下一局，再一起",
+            status: "两个人的游戏时间",
+            caption: "根据屏幕提示按下左键或右键；不会失败，慢慢来。",
+            objective: "完成 12 次配合。键盘可使用 A / D 或方向键。",
+            paragraphs: [
+                "一起玩游戏的时候，输赢好像没有那么重要。",
+                "重要的是，一局结束以后，已经开始期待下一局。"
+            ]
+        },
+        meteor: {
+            kicker: "CHAPTER 04 · 星夜",
+            title: "一起看过的流星",
+            status: "流星正在靠近",
+            caption: "点击划过天空的流星，把五颗星送进花苞。",
+            objective: "接住 5 颗流星。错过也没关系，它会再次回来。",
+            paragraphs: [
+                "那晚的流星很快，很多愿望都来不及说出口。",
+                "所以这一次，把它们一颗一颗留在花里。"
+            ]
+        },
+        bloom: {
+            kicker: "CHAPTER 05 · 盛开",
+            title: "所有回忆都在发光",
+            status: "蓝花正在盛开",
+            caption: "不用做任何事，安静看着它盛开就好。",
+            objective: "让之前收集的回忆，一起回到花园。",
+            paragraphs: [
+                "茶餐厅、喜欢的味道、一起玩过的游戏，还有那晚的流星。",
+                "原来每一件小事，都在悄悄让这朵花长大。"
+            ]
+        },
+        confession: {
+            kicker: "FINAL CHAPTER · 告白",
+            title: "这朵花想说的话",
+            status: "故事暂时写到这里",
+            caption: "蓝色的花已经盛开，而真正的故事才刚刚开始。",
+            objective: "读完这封信，然后抬头看看送你这份礼物的人。",
+            paragraphs: [
+                "我想养大的，从来不只是一朵花。",
+                "而是从遇见你以后，心里开始期待的那些以后。"
+            ]
+        }
+    };
+
+    const TRAIL_LABELS = ["序章", "播种", "初见", "并肩", "星夜", "盛开", "告白"];
+    const MEMORY_DEFS = [
+        { id: "flavor", icon: "☕", label: "喜欢的味道" },
+        { id: "restaurant", icon: "▤", label: "第一次认识" },
+        { id: "switch", icon: "◆", label: "一起玩 Switch" },
+        { id: "meteor", icon: "★", label: "一起看流星" },
+        { id: "flower", icon: "✿", label: "盛开的蓝花" }
+    ];
+
+    const cv = document.getElementById("scene");
     const ctx = cv.getContext("2d");
-    const msgEl = document.getElementById("message");
-    const barFill = document.getElementById("bar-fill");
-    const growthNum = document.getElementById("growth-num");
-    const stageText = document.getElementById("stage-text");
-    const btnSeed = document.getElementById("btn-seed");
-    const btnCoffee = document.getElementById("btn-coffee");
-    const btnChoco = document.getElementById("btn-choco");
-    const endingEl = document.getElementById("ending-text");
+    ctx.imageSmoothingEnabled = false;
 
-    const W = cv.width, H = cv.height;
-    const GROUND_Y = 112;
-    const PLANT_X = 80, BASE_Y = GROUND_Y;
+    const els = {
+        chapterChip: document.getElementById("chapter-chip"),
+        chapterKicker: document.getElementById("chapter-kicker"),
+        chapterTitle: document.getElementById("chapter-title"),
+        sceneStatus: document.getElementById("scene-status"),
+        sceneCaption: document.getElementById("scene-caption"),
+        storyCopy: document.getElementById("story-copy"),
+        objectiveBox: document.getElementById("objective-box"),
+        objectiveText: document.getElementById("objective-text"),
+        interaction: document.getElementById("interaction-area"),
+        memoryShelf: document.getElementById("memory-shelf"),
+        memoryCount: document.getElementById("memory-count"),
+        trail: document.getElementById("chapter-trail"),
+        toast: document.getElementById("scene-toast"),
+        reset: document.getElementById("reset-button"),
+        audio: document.getElementById("audio-button"),
+        frame: document.getElementById("scene-frame")
+    };
 
-    // ---------- 游戏状态 ----------
-    let growth = 0;          // 0 - 100
-    let planted = false;
-    let bloomed = false;
-    let particles = [];
-    let sparkles = [];
-    let cupTimer = 0;   // 咖啡杯显示计时
-    let mouse = { active: false, x: -20 };   // 小老鼠彩蛋
-    let mouseSeen = false;
-    let finale = { active: false, t: 0, flowers: [], curtain: 0, ended: false };
-    let tick = 0;
+    const fixedStars = Array.from({ length: 68 }, function (_, i) {
+        return {
+            x: (i * 83 + 37) % cv.width,
+            y: (i * 47 + 19) % 230,
+            phase: i % 7,
+            size: i % 9 === 0 ? 2 : 1
+        };
+    });
 
-    const STAGES = ["空地", "种子", "发芽", "幼苗", "长叶", "花苞", "盛开!"];
-    function stageIndex() {
-        if (!planted) return 0;
-        if (growth < 15) return 1;
-        if (growth < 35) return 2;
-        if (growth < 55) return 3;
-        if (growth < 75) return 4;
-        if (growth < 100) return 5;
-        return 6;
+    let state = {
+        chapter: "prologue",
+        memories: [],
+        seedPlanted: false,
+        seedGift: null,
+        seedDragging: false,
+        seedPointer: { x: 122, y: 220 },
+        restaurantFound: [],
+        restaurantHintUntil: 0,
+        switchGame: { started: false, step: 0, hits: 0, finished: false },
+        meteor: { caught: 0, current: null, respawnAt: 0 },
+        bloomStarted: 0,
+        particles: [],
+        audioEnabled: false,
+        lastTime: performance.now(),
+        toastTimer: 0,
+        tick: 0
+    };
+
+    const SWITCH_SEQUENCE = ["left", "right", "left", "left", "right", "right", "left", "right", "right", "left", "right", "left"];
+    const RESTAURANT_HITS = {
+        menu: { x: 104, y: 280, w: 106, h: 72, line: "那天点过什么也许会忘记，但第一次见面的场景被认真留了下来。" },
+        drink: { x: 321, y: 246, w: 88, h: 94, line: "从那天开始，有人悄悄记住了你喜欢的味道。" },
+        seat: { x: 515, y: 220, w: 135, h: 158, line: "对面的座位原本很普通，因为坐着你，才成了故事开始的地方。" }
+    };
+
+    let audioContext = null;
+
+    function clamp(value, min, max) {
+        return Math.max(min, Math.min(max, value));
     }
 
-    // ---------- 像素绘制工具 ----------
-    function px(x, y, w, h, c) {
-        ctx.fillStyle = c;
-        ctx.fillRect(Math.round(x), Math.round(y), w, h);
+    function chapterIndex(id) {
+        return Math.max(0, CHAPTERS.indexOf(id));
     }
 
-    // ---------- 场景绘制 ----------
-    function drawSky() {
-        // 天空渐变（分层色带模拟像素渐变）
-        const bands = ["#16233c", "#1a2a46", "#1f3150", "#243a5c", "#2a4468"];
-        const bh = GROUND_Y / bands.length;
-        bands.forEach((c, i) => px(0, i * bh, W, bh + 1, c));
-        // 星星
-        for (let i = 0; i < 18; i++) {
-            const sx = (i * 37 + 13) % W;
-            const sy = (i * 23 + 7) % (GROUND_Y - 20);
-            const on = ((tick >> 4) + i) % 3 !== 0;
-            px(sx, sy, 1, 1, on ? "#cfe6ff" : "#4a5f85");
+    function loadProgress() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (!raw) return null;
+            const saved = JSON.parse(raw);
+            if (!saved || saved.version !== 1 || !CHAPTERS.includes(saved.chapter)) return null;
+            const allowed = MEMORY_DEFS.map(function (item) { return item.id; });
+            return {
+                chapter: saved.chapter,
+                memories: Array.isArray(saved.memories)
+                    ? saved.memories.filter(function (id) { return allowed.includes(id); })
+                    : []
+            };
+        } catch (error) {
+            return null;
         }
-        // 月亮（像素圆形 + 陨石坑）
-        const mx = 130, my = 8;
-        const moonRows = [6, 10, 12, 12, 14, 14, 14, 14, 14, 14, 12, 12, 10, 6];
-        moonRows.forEach((w, i) => {
-            px(mx + (14 - w) / 2, my + i, w, 1, "#f2e8bb");
+    }
+
+    function saveProgress() {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                version: 1,
+                chapter: state.chapter,
+                memories: state.memories
+            }));
+        } catch (error) {
+            // The story remains fully playable when storage is unavailable.
+        }
+    }
+
+    function resetRuntime(id) {
+        state.seedDragging = false;
+        state.seedPointer = { x: 122, y: 220 };
+        state.particles = [];
+        if (id === "seed") {
+            state.seedPlanted = false;
+            state.seedGift = null;
+        }
+        if (id === "restaurant") {
+            state.restaurantFound = [];
+            state.restaurantHintUntil = 0;
+        }
+        if (id === "switch") {
+            state.switchGame = { started: false, step: 0, hits: 0, finished: false };
+        }
+        if (id === "meteor") {
+            state.meteor = { caught: 0, current: null, respawnAt: performance.now() + 700 };
+        }
+        if (id === "bloom") {
+            state.bloomStarted = performance.now();
+            burst(360, 236, "#66b9ef", 48, 130);
+        }
+    }
+
+    function goToChapter(id, options) {
+        if (!CHAPTERS.includes(id)) return;
+        const opts = options || {};
+        state.chapter = id;
+        resetRuntime(id);
+        if (!opts.skipSave) saveProgress();
+        renderInterface();
+        chimeForChapter(id);
+    }
+
+    function nextChapter() {
+        const next = CHAPTERS[chapterIndex(state.chapter) + 1];
+        if (next) goToChapter(next);
+    }
+
+    function unlockMemory(id) {
+        if (!state.memories.includes(id)) {
+            state.memories.push(id);
+            saveProgress();
+            renderMemories();
+            playTone(660, .12, "sine");
+            setTimeout(function () { playTone(880, .15, "sine"); }, 90);
+        }
+    }
+
+    function renderInterface() {
+        const meta = CHAPTER_META[state.chapter];
+        const idx = chapterIndex(state.chapter);
+        els.chapterChip.textContent = "CHAPTER " + String(idx).padStart(2, "0") + " / 06";
+        els.chapterKicker.textContent = meta.kicker;
+        els.chapterTitle.textContent = meta.title;
+        els.sceneStatus.textContent = meta.status;
+        els.sceneCaption.textContent = meta.caption;
+        els.objectiveText.textContent = meta.objective;
+        els.storyCopy.innerHTML = "";
+        meta.paragraphs.forEach(function (text) {
+            const p = document.createElement("p");
+            p.textContent = text;
+            els.storyCopy.appendChild(p);
         });
-        // 高光与陨石坑
-        px(mx + 3, my + 3, 3, 3, "#fff5d0");
-        px(mx + 9, my + 4, 3, 3, "#c9bd88");
-        px(mx + 4, my + 9, 2, 2, "#c9bd88");
-        px(mx + 10, my + 10, 2, 2, "#c9bd88");
+        els.objectiveBox.hidden = state.chapter === "confession";
+        renderInteraction();
+        renderMemories();
+        renderTrail();
+        cv.setAttribute("aria-label", meta.caption);
     }
 
-    function drawGround() {
-        px(0, GROUND_Y, W, H - GROUND_Y, "#4a3520");
-        px(0, GROUND_Y, W, 3, "#5d8a3c");
-        // 草地像素
-        for (let i = 0; i < 26; i++) {
-            const gx = (i * 29 + 5) % W;
-            px(gx, GROUND_Y - 1 - (i % 2), 1, 2, "#6fa04a");
-        }
-        // 土壤颗粒
-        for (let i = 0; i < 30; i++) {
-            const dx = (i * 41 + 9) % W;
-            const dy = GROUND_Y + 5 + (i * 13) % (H - GROUND_Y - 8);
-            px(dx, dy, 2, 1, "#3a2817");
-        }
+    function button(label, handler, className) {
+        const el = document.createElement("button");
+        el.type = "button";
+        el.className = className || "story-button";
+        el.textContent = label;
+        el.addEventListener("click", handler);
+        return el;
     }
 
-    function drawMound() {
-        if (!planted) return;
-        // 种下种子后的小土堆
-        px(PLANT_X - 6, GROUND_Y - 1, 12, 2, "#4a3520");
-        px(PLANT_X - 4, GROUND_Y - 2, 8, 1, "#5a422a");
-    }
-
-    // 先把杯子（不含蒸汽）画到离屏画布，方便旋转
-    const cupCanvas = document.createElement("canvas");
-    cupCanvas.width = 20;
-    cupCanvas.height = 18;
-    (function paintCup() {
-        const c2 = cupCanvas.getContext("2d");
-        function q(x, y, w, h, col) { c2.fillStyle = col; c2.fillRect(x, y, w, h); }
-        const body = "#f5f0e6", shade = "#c8c0b0";
-        // 咖啡液面
-        q(2, 0, 12, 2, "#6b4226");
-        q(3, 0, 3, 1, "#8a5a32");
-        // 杯身
-        q(2, 2, 12, 8, body);
-        q(3, 10, 10, 2, body);
-        q(11, 2, 3, 8, shade);
-        q(10, 10, 3, 2, shade);
-        // 杯把
-        q(14, 3, 3, 2, body);
-        q(16, 5, 2, 3, body);
-        q(14, 8, 3, 2, body);
-        // 托盘
-        q(0, 13, 16, 2, body);
-        q(2, 15, 12, 1, shade);
-    })();
-
-    const CUP_DURATION = 75;
-
-    function drawCup() {
-        if (cupTimer <= 0) return;
-        // 倾斜动画：先渐入到 45°，保持，最后渐出
-        const elapsed = CUP_DURATION - cupTimer;
-        let t = 1;
-        if (elapsed < 10) t = elapsed / 10;
-        else if (cupTimer < 10) t = cupTimer / 10;
-        const angle = -(Math.PI / 4) * t;   // 向左侧倾斜 45° 倒咖啡
-
-        const cx = PLANT_X + 4;
-        const cy = 34 + Math.round(Math.sin(tick / 8) * 2);
-
-        // 蒸汽（保持竖直上升，不随杯子旋转）
-        const sv = (tick >> 3) % 2;
-        const sx = cx - 9 * t, sy = cy - 9 * t - 3;
-        px(sx + sv, sy - 3, 1, 2, "#e8e8e8");
-        px(sx - 1 + sv, sy - 5, 1, 2, "#b8b8b8");
-        px(sx + sv, sy - 7, 1, 2, "#e8e8e8");
-        px(sx + 5 - sv, sy - 3, 1, 2, "#e8e8e8");
-        px(sx + 6 - sv, sy - 5, 1, 2, "#b8b8b8");
-        px(sx + 5 - sv, sy - 7, 1, 2, "#e8e8e8");
-
-        // 旋转 45° 的杯身
-        ctx.save();
-        ctx.imageSmoothingEnabled = false;
-        ctx.translate(cx, cy);
-        ctx.rotate(angle);
-        ctx.drawImage(cupCanvas, -10, -9);
-        ctx.restore();
-    }
-
-    function stemTop() {
-        // 根据成长值返回茎的高度
-        const st = stageIndex();
-        return [0, 0, 6, 16, 30, 44, 50][st];
-    }
-
-    function drawPlant() {
-        if (!planted) return;
-        const st = stageIndex();
-        const sway = st >= 3 ? Math.round(Math.sin(tick / 22) * 1.5) : 0;
-        const baseY = BASE_Y + 1;
-        const th = stemTop();
-        const topY = baseY - th;
-        const cx = PLANT_X + (st >= 3 ? sway : 0);
-
-        // 种子
-        if (st === 1) {
-            px(PLANT_X - 2, baseY - 2, 4, 3, "#8a5a32");
-            px(PLANT_X - 1, baseY - 3, 2, 1, "#a06a3e");
+    function renderInteraction() {
+        els.interaction.innerHTML = "";
+        if (state.chapter === "prologue") {
+            els.interaction.appendChild(button("走进这座花园  →", function () {
+                goToChapter("seed");
+            }));
             return;
         }
 
-        // 茎
-        for (let y = 0; y < th; y += 2) {
-            const off = st >= 3 ? Math.round(Math.sin((tick + y) / 22) * (y / th) * 1.5) : 0;
-            px(PLANT_X - 1 + off, baseY - y - 2, 2, 2, "#3e7a2e");
+        if (state.chapter === "seed") {
+            if (!state.seedPlanted) {
+                els.interaction.appendChild(button("把种子轻轻放进花盆", plantSeed));
+                const note = document.createElement("div");
+                note.className = "tiny-note";
+                note.textContent = "也可以直接在左侧拖动那颗发光的种子。";
+                els.interaction.appendChild(note);
+            } else if (!state.seedGift) {
+                const choices = document.createElement("div");
+                choices.className = "choice-grid";
+                const coffee = button("热咖啡", function () { nurtureSeed("coffee"); }, "choice-button coffee");
+                coffee.insertAdjacentHTML("beforeend", "<span>暖暖的、带一点香气</span>");
+                const chocolate = button("巧克力", function () { nurtureSeed("chocolate"); }, "choice-button chocolate");
+                chocolate.insertAdjacentHTML("beforeend", "<span>甜甜的、被认真记住</span>");
+                choices.appendChild(coffee);
+                choices.appendChild(chocolate);
+                els.interaction.appendChild(choices);
+            } else {
+                els.interaction.appendChild(button("跟着新芽，去看看它记住了什么  →", nextChapter));
+            }
+            return;
         }
 
-        // 叶子
-        if (st >= 3) {
-            const ly = baseY - Math.floor(th * 0.5);
-            px(cx - 6, ly, 5, 2, "#4e943a");
-            px(cx - 5, ly - 1, 3, 1, "#4e943a");
-            px(cx + 1, ly + 4, 5, 2, "#4e943a");
-            px(cx + 2, ly + 3, 3, 1, "#4e943a");
-        }
-        if (st >= 4) {
-            const ly2 = baseY - Math.floor(th * 0.75);
-            px(cx + 1, ly2, 6, 2, "#5aa344");
-            px(cx + 2, ly2 - 1, 4, 1, "#5aa344");
-        }
-
-        // 发芽的小叶
-        if (st === 2) {
-            px(PLANT_X - 4, topY - 1, 3, 2, "#5aa344");
-            px(PLANT_X + 1, topY - 1, 3, 2, "#5aa344");
+        if (state.chapter === "restaurant") {
+            renderRestaurantList();
+            if (state.restaurantFound.length < 3) {
+                els.interaction.appendChild(button("让场景里的物品闪一下", function () {
+                    state.restaurantHintUntil = performance.now() + 2200;
+                    showToast("三处微光已经亮起，去左侧找找看。");
+                    playTone(520, .12, "triangle");
+                }, "story-button secondary"));
+            } else {
+                els.interaction.appendChild(button("把这一天收进回忆  →", function () {
+                    unlockMemory("restaurant");
+                    nextChapter();
+                }));
+            }
+            return;
         }
 
-        // 花苞
-        if (st === 5) {
-            px(cx - 2, topY - 5, 5, 5, "#3e6ea8");
-            px(cx - 1, topY - 6, 3, 1, "#5aa9e6");
-            px(cx - 2, topY, 5, 1, "#3e7a2e");
+        if (state.chapter === "switch") {
+            renderSwitchInteraction();
+            return;
         }
 
-        // 盛开的蓝花
-        if (st === 6) {
-            const cy = topY - 5;
-            // 花瓣（深蓝外层 + 亮蓝内层）
-            const petals = [
-                [0, -7], [5, -5], [7, 0], [5, 5],
-                [0, 7], [-5, 5], [-7, 0], [-5, -5]
-            ];
-            petals.forEach(([ox, oy], i) => {
-                const bob = Math.round(Math.sin(tick / 18 + i) * 1);
-                px(cx + ox - 2, cy + oy - 2 + bob, 5, 5, "#3a6fd8");
-                px(cx + ox - 1, cy + oy - 1 + bob, 3, 3, "#5aa9e6");
-                px(cx + ox, cy + oy + bob, 1, 1, "#9fd4ff");
-            });
-            // 花心
-            px(cx - 2, cy - 2, 5, 5, "#f2c94c");
-            px(cx - 1, cy - 1, 3, 3, "#ffe89a");
-            // 花茎顶端
-            px(cx - 1, cy + 6, 2, 3, "#3e7a2e");
+        if (state.chapter === "meteor") {
+            const progress = document.createElement("div");
+            progress.className = "found-row found";
+            progress.innerHTML = "<span class=\"found-icon\">★</span><span>已经接住 " + state.meteor.caught + " / 5 颗流星</span>";
+            els.interaction.appendChild(progress);
+            els.interaction.appendChild(button("接住现在这颗流星", catchMeteorAccessible, "story-button secondary"));
+            return;
+        }
+
+        if (state.chapter === "bloom") {
+            const note = document.createElement("div");
+            note.className = "tiny-note";
+            note.textContent = "回忆正在一件一件回到花园里……";
+            els.interaction.appendChild(note);
+            return;
+        }
+
+        if (state.chapter === "confession") {
+            const card = document.createElement("div");
+            card.className = "confession-card";
+            const glyph = document.createElement("span");
+            glyph.className = "flower-glyph";
+            glyph.textContent = "✿";
+            const p = document.createElement("p");
+            p.textContent = FINAL_CONFESSION;
+            card.appendChild(glyph);
+            card.appendChild(p);
+            els.interaction.appendChild(card);
+            els.interaction.appendChild(button("再从故事的开头看一次", function () {
+                resetProgress(false);
+            }, "story-button secondary"));
         }
     }
 
-    function drawMouse() {
-        if (!mouse.active) return;
-        const x = Math.round(mouse.x), y = GROUND_Y - 4;
-        const legFrame = (tick >> 2) % 2;
-        // 尾巴
-        px(x - 4, y + 1, 4, 1, "#d88a9a");
-        px(x - 5, y, 1, 1, "#d88a9a");
-        // 身体
-        px(x, y, 8, 4, "#9a9a9a");
-        px(x + 1, y - 1, 5, 1, "#b0b0b0");   // 背部高光
-        px(x + 6, y + 1, 3, 2, "#9a9a9a");   // 头
-        px(x + 5, y - 2, 2, 2, "#b8b8b8");   // 耳朵
-        px(x + 8, y + 1, 1, 1, "#1a1a1a");   // 眼睛
-        px(x + 9, y + 2, 1, 1, "#d88a9a");   // 鼻子
-        // 腿（两帧跑动动画）
-        if (legFrame === 0) {
-            px(x + 1, y + 4, 1, 2, "#7a7a7a");
-            px(x + 5, y + 4, 1, 2, "#7a7a7a");
+    function renderRestaurantList() {
+        const list = document.createElement("div");
+        list.className = "found-list";
+        [
+            { id: "menu", icon: "▤", label: "一张菜单" },
+            { id: "drink", icon: "☕", label: "一杯喜欢的味道" },
+            { id: "seat", icon: "□", label: "对面的座位" }
+        ].forEach(function (item) {
+            const found = state.restaurantFound.includes(item.id);
+            const row = document.createElement("div");
+            row.className = "found-row" + (found ? " found" : "");
+            row.innerHTML = "<span class=\"found-icon\">" + item.icon + "</span><span>" + (found ? item.label : "还未找到的回忆") + "</span>";
+            list.appendChild(row);
+        });
+        els.interaction.appendChild(list);
+    }
+
+    function renderSwitchInteraction() {
+        const game = state.switchGame;
+        if (!game.started) {
+            els.interaction.appendChild(button("拿起手柄，开始这一局", startSwitch));
+            return;
+        }
+        if (game.finished) {
+            const result = document.createElement("div");
+            result.className = "objective-box";
+            result.innerHTML = "<strong>CO-OP COMPLETE</strong>完成了 " + game.hits + " / " + SWITCH_SEQUENCE.length + " 次默契配合。";
+            els.interaction.appendChild(result);
+            els.interaction.appendChild(button("把这局游戏也收进花里  →", function () {
+                unlockMemory("switch");
+                nextChapter();
+            }));
+            return;
+        }
+
+        const controls = document.createElement("div");
+        controls.className = "switch-controls";
+        controls.appendChild(button("A  /  ←", function () { handleSwitchInput("left"); }, "switch-key left"));
+        controls.appendChild(button("D  /  →", function () { handleSwitchInput("right"); }, "switch-key right"));
+        els.interaction.appendChild(controls);
+
+        const score = document.createElement("div");
+        score.className = "switch-score";
+        score.innerHTML = "<span>STEP " + (game.step + 1) + " / " + SWITCH_SEQUENCE.length + "</span><span>默契 " + game.hits + "</span>";
+        els.interaction.appendChild(score);
+    }
+
+    function renderMemories() {
+        els.memoryShelf.innerHTML = "";
+        MEMORY_DEFS.forEach(function (item) {
+            const unlocked = state.memories.includes(item.id);
+            const cell = document.createElement("div");
+            cell.className = "memory-item" + (unlocked ? " unlocked" : "");
+            cell.textContent = unlocked ? item.icon : "·";
+            cell.title = unlocked ? item.label : "尚未收集";
+            cell.setAttribute("aria-label", unlocked ? item.label : "尚未收集的回忆");
+            els.memoryShelf.appendChild(cell);
+        });
+        els.memoryCount.textContent = state.memories.length + " / " + MEMORY_DEFS.length;
+    }
+
+    function renderTrail() {
+        const active = chapterIndex(state.chapter);
+        els.trail.innerHTML = "";
+        CHAPTERS.forEach(function (id, index) {
+            const step = document.createElement("div");
+            step.className = "trail-step" + (index < active ? " done" : index === active ? " active" : "");
+            step.setAttribute("aria-current", index === active ? "step" : "false");
+            const petal = document.createElement("span");
+            petal.className = "trail-petal";
+            const label = document.createElement("span");
+            label.textContent = TRAIL_LABELS[index];
+            step.appendChild(petal);
+            step.appendChild(label);
+            els.trail.appendChild(step);
+        });
+    }
+
+    function showToast(text, duration) {
+        els.toast.textContent = text;
+        els.toast.classList.add("show");
+        clearTimeout(state.toastTimer);
+        state.toastTimer = setTimeout(function () {
+            els.toast.classList.remove("show");
+        }, duration || 2400);
+    }
+
+    function plantSeed() {
+        if (state.chapter !== "seed" || state.seedPlanted) return;
+        state.seedPlanted = true;
+        state.seedDragging = false;
+        state.seedPointer = { x: 360, y: 333 };
+        burst(360, 330, "#a87849", 22, 70);
+        showToast("种子落进了土里。它正在等待一种熟悉的味道。");
+        playTone(330, .18, "sine");
+        renderInteraction();
+    }
+
+    function nurtureSeed(type) {
+        if (!state.seedPlanted || state.seedGift) return;
+        state.seedGift = type;
+        unlockMemory("flavor");
+        burst(360, 290, type === "coffee" ? "#bc8157" : "#8a5d42", 30, 100);
+        showToast(type === "coffee"
+            ? "热咖啡的香气落进土壤，新芽轻轻动了一下。"
+            : "巧克力的甜味被种子记住，一片小叶慢慢展开。", 3000);
+        playTone(440, .18, "triangle");
+        setTimeout(function () { playTone(660, .22, "sine"); }, 150);
+        renderInteraction();
+    }
+
+    function findRestaurantItem(id) {
+        if (state.chapter !== "restaurant" || state.restaurantFound.includes(id)) return;
+        state.restaurantFound.push(id);
+        const hit = RESTAURANT_HITS[id];
+        burst(hit.x + hit.w / 2, hit.y + hit.h / 2, "#efc76a", 24, 90);
+        showToast(hit.line, 3600);
+        playTone(520 + state.restaurantFound.length * 90, .16, "sine");
+        renderInteraction();
+        if (state.restaurantFound.length === 3) {
+            setTimeout(function () {
+                if (state.chapter === "restaurant") {
+                    showToast("三件普通的小事，拼成了故事开始的那一天。", 3200);
+                }
+            }, 900);
+        }
+    }
+
+    function startSwitch() {
+        state.switchGame = { started: true, step: 0, hits: 0, finished: false };
+        playTone(392, .1, "square");
+        setTimeout(function () { playTone(523, .1, "square"); }, 110);
+        renderInteraction();
+        showToast("看准提示，一起按下同一个方向。");
+        cv.focus();
+    }
+
+    function handleSwitchInput(direction) {
+        const game = state.switchGame;
+        if (state.chapter !== "switch" || !game.started || game.finished) return;
+        const correct = SWITCH_SEQUENCE[game.step] === direction;
+        if (correct) {
+            game.hits += 1;
+            burst(direction === "left" ? 276 : 444, 270, direction === "left" ? "#ef9ba9" : "#66b9ef", 12, 60);
+            playTone(direction === "left" ? 440 : 554, .08, "square");
         } else {
-            px(x + 2, y + 4, 1, 2, "#7a7a7a");
-            px(x + 4, y + 4, 1, 2, "#7a7a7a");
+            playTone(220, .06, "triangle");
         }
-    }
-
-    function drawParticles() {
-        particles.forEach(p => {
-            px(p.x, p.y, p.size, p.size, p.color);
-        });
-        sparkles.forEach(s => {
-            const on = (tick + s.phase) % 20 < 10;
-            if (on) {
-                px(s.x, s.y, 1, 1, "#ffffff");
-                px(s.x - 1, s.y, 1, 1, "#9fd4ff");
-                px(s.x + 1, s.y, 1, 1, "#9fd4ff");
-                px(s.x, s.y - 1, 1, 1, "#9fd4ff");
-                px(s.x, s.y + 1, 1, 1, "#9fd4ff");
+        game.step += 1;
+        if (game.step >= SWITCH_SEQUENCE.length) {
+            game.finished = true;
+            if (game.hits >= 9) {
+                showToast("隐藏对白：比起赢下一局，更开心的是和你并肩坐在这里。", 4200);
+            } else {
+                showToast("这一局没有输赢，只有两个人一起走到了终点。", 3400);
             }
-        });
+        }
+        renderInteraction();
     }
 
-    // ---------- 结局演出 ----------
-    function startFinale() {
-        finale.active = true;
-        // 后排：沿地面线开一排花（避开中间主花）
-        const backXs = [8, 20, 32, 44, 58, 70, 92, 104, 116, 128, 140, 152];
-        backXs.forEach((x, i) => {
-            finale.flowers.push({
-                x, y: GROUND_Y + 2,
-                maxH: 20 + Math.floor(Math.random() * 22),
-                delay: i * 7 + Math.floor(Math.random() * 6),
-                swayP: Math.random() * 10
-            });
-        });
-        // 前排：土壤里再开一层矮花，铺满屏幕
-        for (let i = 0; i < 7; i++) {
-            finale.flowers.push({
-                x: 10 + Math.floor(Math.random() * 140),
-                y: GROUND_Y + 10 + Math.floor(Math.random() * 24),
-                maxH: 8 + Math.floor(Math.random() * 8),
-                delay: 60 + i * 8 + Math.floor(Math.random() * 6),
-                swayP: Math.random() * 10
+    function spawnMeteor(now) {
+        const n = state.meteor.caught;
+        state.meteor.current = {
+            x: -50,
+            y: 52 + (n * 37) % 135,
+            vx: 150 + n * 8,
+            vy: 48 + (n % 2) * 12,
+            born: now
+        };
+    }
+
+    function catchMeteorAccessible() {
+        if (state.meteor.current) catchMeteor();
+        else showToast("下一颗流星正在靠近，再等一小会儿。");
+    }
+
+    function catchMeteor() {
+        if (state.chapter !== "meteor" || !state.meteor.current) return;
+        const m = state.meteor.current;
+        burst(m.x, m.y, "#efc76a", 34, 150);
+        state.meteor.current = null;
+        state.meteor.caught += 1;
+        playTone(660 + state.meteor.caught * 55, .18, "sine");
+        showToast(["第一颗星，记住相遇。", "第二颗星，记住笑声。", "第三颗星，记住并肩。", "第四颗星，记住期待。", "第五颗星，落进花苞。"][state.meteor.caught - 1]);
+        renderInteraction();
+        if (state.meteor.caught >= 5) {
+            unlockMemory("meteor");
+            setTimeout(function () {
+                if (state.chapter === "meteor") goToChapter("bloom");
+            }, 1300);
+        } else {
+            state.meteor.respawnAt = performance.now() + 700;
+        }
+    }
+
+    function resetProgress(ask) {
+        if (ask !== false && !window.confirm("要清除当前进度，从第一颗种子重新开始吗？")) return;
+        try {
+            localStorage.removeItem(STORAGE_KEY);
+        } catch (error) {
+            // Ignore storage restrictions.
+        }
+        state.memories = [];
+        goToChapter("prologue");
+        showToast("花园回到了故事开始以前。");
+    }
+
+    function toggleAudio() {
+        state.audioEnabled = !state.audioEnabled;
+        els.audio.textContent = state.audioEnabled ? "♫ ON" : "♫ OFF";
+        els.audio.setAttribute("aria-label", state.audioEnabled ? "关闭声音" : "开启声音");
+        if (state.audioEnabled) {
+            playTone(523, .1, "sine");
+            setTimeout(function () { playTone(659, .12, "sine"); }, 100);
+        }
+    }
+
+    function playTone(frequency, duration, type) {
+        if (!state.audioEnabled) return;
+        try {
+            audioContext = audioContext || new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            oscillator.type = type || "sine";
+            oscillator.frequency.value = frequency;
+            gain.gain.setValueAtTime(.0001, audioContext.currentTime);
+            gain.gain.exponentialRampToValueAtTime(.045, audioContext.currentTime + .015);
+            gain.gain.exponentialRampToValueAtTime(.0001, audioContext.currentTime + duration);
+            oscillator.connect(gain);
+            gain.connect(audioContext.destination);
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + duration + .02);
+        } catch (error) {
+            state.audioEnabled = false;
+            els.audio.textContent = "♫ OFF";
+        }
+    }
+
+    function chimeForChapter(id) {
+        if (id === "bloom" || id === "confession") {
+            [523, 659, 784].forEach(function (note, index) {
+                setTimeout(function () { playTone(note, .35, "sine"); }, index * 180);
             });
         }
-        finale.flowers.sort((a, b) => a.y - b.y);
-        setMessage("> 花香飘散，蓝色的花朵开满了整个花园……");
     }
 
-    function drawFinale() {
-        if (!finale.active) return;
-        finale.flowers.forEach(f => {
-            const t = finale.t - f.delay;
-            if (t <= 0) return;
-            // 茎的伸展（缓出动画）
-            const grow = Math.min(1, t / 26);
-            const h = Math.round(f.maxH * (1 - Math.pow(1 - grow, 3)));
-            const sway = Math.round(Math.sin(tick / 20 + f.swayP));
-            const x = f.x + sway;
-            for (let y = 0; y < h; y += 2) px(x - 1, f.y - y - 2, 2, 2, "#3e7a2e");
-            if (h > 8) {
-                px(x - 4, f.y - Math.floor(h / 2), 3, 2, "#4e943a");
-                px(x + 1, f.y - Math.floor(h / 2) - 3, 3, 2, "#4e943a");
+    function pointerPosition(event) {
+        const rect = cv.getBoundingClientRect();
+        return {
+            x: (event.clientX - rect.left) * cv.width / rect.width,
+            y: (event.clientY - rect.top) * cv.height / rect.height
+        };
+    }
+
+    function inRect(point, rect) {
+        return point.x >= rect.x && point.x <= rect.x + rect.w
+            && point.y >= rect.y && point.y <= rect.y + rect.h;
+    }
+
+    cv.addEventListener("pointerdown", function (event) {
+        const p = pointerPosition(event);
+        if (state.chapter === "seed" && !state.seedPlanted) {
+            const dx = p.x - state.seedPointer.x;
+            const dy = p.y - state.seedPointer.y;
+            if (Math.hypot(dx, dy) < 42) {
+                state.seedDragging = true;
+                cv.setPointerCapture(event.pointerId);
             }
-            // 花朵（从小到大伸展绽放）
-            const s = Math.min(1, Math.max(0, (t - 26) / 14));
-            if (s <= 0) return;
-            const p = Math.max(1, Math.round(2 * s));
-            const d = Math.max(1, Math.round(3 * s));
-            const cy = f.y - h - p;
-            [[0, -d], [d, 0], [0, d], [-d, 0]].forEach(([ox, oy]) => {
-                px(x + ox - p, cy + oy - p, p * 2, p * 2, "#3a6fd8");
-                px(x + ox - p + 1, cy + oy - p + 1, Math.max(1, p * 2 - 2), Math.max(1, p * 2 - 2), "#5aa9e6");
+        } else if (state.chapter === "restaurant") {
+            Object.keys(RESTAURANT_HITS).forEach(function (id) {
+                if (inRect(p, RESTAURANT_HITS[id])) findRestaurantItem(id);
             });
-            px(x - p, cy - p, p * 2, p * 2, "#f2c94c");
-        });
-    }
-
-    function drawCurtain() {
-        if (finale.curtain <= 0) return;
-        const ch = Math.round(finale.curtain);
-        px(0, 0, W, ch, "#1a1226");
-        px(0, H - ch, W, ch, "#1a1226");
-        px(0, ch - 2, W, 2, "#c9a227");
-        px(0, H - ch, W, 2, "#c9a227");
-    }
-
-    function render() {
-        ctx.clearRect(0, 0, W, H);
-        drawSky();
-        drawGround();
-        drawMound();
-        drawPlant();
-        drawCup();
-        drawMouse();
-        drawFinale();
-        drawParticles();
-        drawCurtain();
-    }
-
-    // ---------- 游戏循环 ----------
-    function loop() {
-        tick++;
-        // 粒子更新
-        particles.forEach(p => {
-            p.y += p.vy;
-            p.x += p.vx;
-            p.life--;
-        });
-        particles = particles.filter(p => p.life > 0 && p.y < BASE_Y + 2);
-        if (cupTimer > 0) cupTimer--;
-
-        // 小老鼠从左边跑到右边
-        if (mouse.active) {
-            mouse.x += 2.2;
-            if (mouse.x > W + 12) mouse.active = false;
+        } else if (state.chapter === "meteor" && state.meteor.current) {
+            const m = state.meteor.current;
+            if (Math.hypot(p.x - m.x, p.y - m.y) < 48) catchMeteor();
         }
+    });
 
-        // 结局演出推进
-        if (finale.active) {
-            finale.t++;
-            if (finale.t > 140 && finale.curtain < H / 2) {
-                finale.curtain = Math.min(H / 2, finale.curtain + 1.5);
-                if (finale.curtain >= H / 2 && !finale.ended) {
-                    finale.ended = true;
-                    endingEl.classList.add("show");
-                    setMessage("> 感谢游玩 · 剧情未完待续…");
-                    stageText.textContent = "STAGE: 未完待续";
+    cv.addEventListener("pointermove", function (event) {
+        if (!state.seedDragging) return;
+        state.seedPointer = pointerPosition(event);
+    });
+
+    cv.addEventListener("pointerup", function (event) {
+        if (!state.seedDragging) return;
+        const p = pointerPosition(event);
+        state.seedDragging = false;
+        if (Math.hypot(p.x - 360, p.y - 337) < 92) {
+            plantSeed();
+        } else {
+            state.seedPointer = { x: 122, y: 220 };
+            showToast("花盆在画面中央，再试一次。");
+        }
+    });
+
+    document.addEventListener("keydown", function (event) {
+        if (state.chapter !== "switch" || !state.switchGame.started || state.switchGame.finished) return;
+        const key = event.key.toLowerCase();
+        if (key === "a" || key === "arrowleft") {
+            event.preventDefault();
+            handleSwitchInput("left");
+        } else if (key === "d" || key === "arrowright") {
+            event.preventDefault();
+            handleSwitchInput("right");
+        }
+    });
+
+    els.reset.addEventListener("click", function () { resetProgress(true); });
+    els.audio.addEventListener("click", toggleAudio);
+
+    function px(x, y, w, h, color) {
+        ctx.fillStyle = color;
+        ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h));
+    }
+
+    function line(x1, y1, x2, y2, color, width) {
+        ctx.strokeStyle = color;
+        ctx.lineWidth = width || 2;
+        ctx.beginPath();
+        ctx.moveTo(Math.round(x1), Math.round(y1));
+        ctx.lineTo(Math.round(x2), Math.round(y2));
+        ctx.stroke();
+    }
+
+    function text(label, x, y, color, size, align) {
+        ctx.fillStyle = color;
+        ctx.font = (size || 13) + "px 'DotGothic16', monospace";
+        ctx.textAlign = align || "left";
+        ctx.textBaseline = "middle";
+        ctx.fillText(label, x, y);
+    }
+
+    function drawNightSky(meteorMode) {
+        const bands = ["#101827", "#13223a", "#19304b", "#21425d", "#2d5870"];
+        bands.forEach(function (color, index) {
+            px(0, index * 58, cv.width, 59, color);
+        });
+        fixedStars.forEach(function (star, index) {
+            const bright = (Math.floor(state.tick / 18) + star.phase + index) % 5 !== 0;
+            px(star.x, star.y, star.size, star.size, bright ? "#d9efff" : "#60788d");
+        });
+        const moonX = meteorMode ? 596 : 570;
+        px(moonX, 46, 42, 42, "#f3dfa1");
+        px(moonX + 8, 40, 26, 54, "#f3dfa1");
+        px(moonX + 25, 48, 20, 38, "#d9c47d");
+        px(moonX + 29, 48, 18, 34, "#19304b");
+    }
+
+    function drawGardenBase() {
+        drawNightSky(false);
+        px(0, 284, cv.width, 176, "#1c352d");
+        px(0, 284, cv.width, 7, "#47734e");
+        for (let x = 0; x < cv.width; x += 18) {
+            px(x, 278 - (x % 36 === 0 ? 4 : 0), 3, 10, x % 54 === 0 ? "#76a45e" : "#4e7f51");
+        }
+        px(46, 195, 124, 92, "#142231");
+        px(57, 207, 102, 80, "#284056");
+        px(64, 215, 88, 72, "#c7a665");
+        px(76, 226, 64, 61, "#283b48");
+        px(92, 226, 3, 61, "#c7a665");
+        px(122, 226, 3, 61, "#c7a665");
+        px(64, 251, 88, 3, "#c7a665");
+        text("BLUE GARDEN", 108, 184, "#91b9c9", 10, "center");
+    }
+
+    function drawPot(x, y) {
+        px(x - 55, y - 18, 110, 15, "#b77750");
+        px(x - 47, y - 3, 94, 53, "#985d40");
+        px(x - 38, y + 50, 76, 8, "#75422f");
+        px(x - 37, y + 4, 74, 8, "#6e432e");
+        px(x - 24, y + 17, 48, 28, "#7f4c34");
+        px(x - 18, y + 22, 36, 3, "#a96c49");
+    }
+
+    function drawPlant(stage, x, groundY, bloomProgress) {
+        const sway = Math.round(Math.sin(state.tick / 28) * 2);
+        if (stage <= 0) return;
+        if (stage === 1) {
+            px(x - 7, groundY - 5, 14, 8, "#9b6a45");
+            px(x - 3, groundY - 8, 7, 4, "#c18a5a");
+            return;
+        }
+        const heights = [0, 0, 42, 82, 116, 135];
+        const h = heights[Math.min(stage, 5)];
+        for (let yy = 0; yy < h; yy += 5) {
+            const off = Math.round(Math.sin((state.tick + yy) / 32) * (yy / h) * 2);
+            px(x - 3 + off, groundY - yy - 5, 7, 7, "#4e8a56");
+            px(x - 1 + off, groundY - yy - 5, 3, 7, "#6eaa69");
+        }
+        if (stage >= 2) {
+            px(x - 29, groundY - 35, 28, 9, "#4b8754");
+            px(x - 23, groundY - 44, 19, 10, "#63a264");
+            px(x + 4, groundY - 56, 29, 9, "#4b8754");
+            px(x + 6, groundY - 65, 20, 10, "#72ad6f");
+        }
+        if (stage >= 3) {
+            px(x - 37, groundY - 82, 34, 10, "#4b8754");
+            px(x - 28, groundY - 92, 22, 12, "#6cac68");
+            px(x + 4, groundY - 102, 37, 10, "#4b8754");
+            px(x + 8, groundY - 113, 25, 12, "#72ad6f");
+        }
+        const topY = groundY - h - 2;
+        if (stage === 4) {
+            px(x - 17 + sway, topY - 16, 34, 24, "#316a9d");
+            px(x - 11 + sway, topY - 23, 22, 10, "#5aa9df");
+            return;
+        }
+        if (stage >= 5) {
+            const p = clamp(bloomProgress === undefined ? 1 : bloomProgress, 0, 1);
+            const radius = 18 + Math.round(p * 16);
+            const petals = [[0,-1], [.72,-.7], [1,0], [.72,.7], [0,1], [-.72,.7], [-1,0], [-.72,-.7]];
+            petals.forEach(function (pair, index) {
+                const ox = pair[0] * radius;
+                const oy = pair[1] * radius;
+                const bob = Math.sin(state.tick / 20 + index) * 2;
+                const size = 18 + Math.round(p * 9);
+                px(x + sway + ox - size / 2, topY + oy - size / 2 + bob, size, size, "#397bb8");
+                px(x + sway + ox - size / 3, topY + oy - size / 3 + bob, size * .66, size * .66, "#66b9ef");
+                px(x + sway + ox - 3, topY + oy - 3 + bob, 7, 7, "#b9e4ff");
+            });
+            px(x - 15 + sway, topY - 15, 31, 31, "#efc76a");
+            px(x - 8 + sway, topY - 8, 17, 17, "#fff1b4");
+        }
+    }
+
+    function drawPrologue() {
+        drawGardenBase();
+        drawPot(360, 345);
+        px(90, 204, 64, 50, "rgba(102,185,239,.08)");
+        drawGlowSeed(122, 220);
+        text("一颗等待被发现的种子", 360, 420, "#aac7db", 14, "center");
+    }
+
+    function drawGlowSeed(x, y) {
+        const glow = 12 + Math.sin(state.tick / 14) * 4;
+        ctx.fillStyle = "rgba(102,185,239,.08)";
+        ctx.beginPath();
+        ctx.arc(x, y, 34 + glow, 0, Math.PI * 2);
+        ctx.fill();
+        px(x - 10, y - 7, 20, 15, "#9b6a45");
+        px(x - 5, y - 11, 12, 7, "#c18a5a");
+        px(x - 1, y - 8, 4, 8, "#e0b67b");
+    }
+
+    function drawSeedScene() {
+        drawGardenBase();
+        drawPot(360, 345);
+        if (!state.seedPlanted) {
+            drawGlowSeed(state.seedPointer.x, state.seedPointer.y);
+            if (state.seedDragging) {
+                line(state.seedPointer.x, state.seedPointer.y + 20, 360, 327, "rgba(185,228,255,.45)", 2);
+            }
+        } else {
+            drawPlant(state.seedGift ? 2 : 1, 360, 328);
+            if (state.seedGift) {
+                const iconColor = state.seedGift === "coffee" ? "#c18a5a" : "#845542";
+                for (let i = 0; i < 10; i++) {
+                    px(320 + (i * 29) % 82, 188 + (i * 23 + state.tick) % 92, 4, 6, iconColor);
                 }
             }
         }
+    }
 
-        // 盛开时产生星光
-        if (bloomed && tick % 30 === 0 && sparkles.length < 6) {
-            sparkles.push({
-                x: PLANT_X - 16 + Math.floor(Math.random() * 32),
-                y: BASE_Y - 60 + Math.floor(Math.random() * 30),
-                phase: Math.floor(Math.random() * 20)
-            });
-            if (sparkles.length > 6) sparkles.shift();
+    function drawRestaurant() {
+        px(0, 0, cv.width, cv.height, "#bb8a61");
+        px(0, 0, cv.width, 220, "#dcb77f");
+        for (let y = 25; y < 220; y += 34) {
+            line(0, y, cv.width, y, "#c49a6d", 2);
         }
+        for (let x = 0; x < cv.width; x += 82) {
+            line(x, 0, x, 220, "#c49a6d", 2);
+        }
+        px(36, 38, 190, 112, "#38536a");
+        px(46, 48, 170, 92, "#1d2b3f");
+        px(54, 58, 154, 74, "#355f70");
+        text("茶 餐 厅", 132, 95, "#f0d99a", 22, "center");
+        px(0, 220, cv.width, 240, "#7c5544");
+        for (let y = 230; y < cv.height; y += 35) {
+            line(0, y, cv.width, y, "#684536", 2);
+        }
+        px(245, 266, 238, 24, "#704735");
+        px(266, 290, 196, 97, "#9a6849");
+        px(284, 387, 18, 73, "#56392e");
+        px(428, 387, 18, 73, "#56392e");
+        px(110, 286, 94, 58, "#efe4c4");
+        px(122, 296, 70, 4, "#a58f73");
+        px(122, 309, 56, 4, "#a58f73");
+        px(122, 322, 65, 4, "#a58f73");
+        px(335, 263, 52, 52, "#f1ead9");
+        px(343, 271, 36, 32, "#9b633f");
+        px(386, 276, 13, 23, "#f1ead9");
+        px(526, 254, 112, 96, "#395b61");
+        px(538, 266, 88, 84, "#4d7776");
+        px(550, 350, 14, 82, "#2d4547");
+        px(602, 350, 14, 82, "#2d4547");
+        drawRestaurantGlow("menu", 157, 314);
+        drawRestaurantGlow("drink", 365, 282);
+        drawRestaurantGlow("seat", 580, 292);
+        if (state.restaurantFound.includes("menu")) text("✓", 157, 268, "#fff0a9", 24, "center");
+        if (state.restaurantFound.includes("drink")) text("✓", 365, 234, "#fff0a9", 24, "center");
+        if (state.restaurantFound.includes("seat")) text("✓", 580, 207, "#fff0a9", 24, "center");
+    }
 
-        render();
+    function drawRestaurantGlow(id, x, y) {
+        const found = state.restaurantFound.includes(id);
+        const hint = performance.now() < state.restaurantHintUntil;
+        if (found || !hint) return;
+        ctx.strokeStyle = "rgba(255,235,150," + (.45 + Math.sin(state.tick / 10) * .25) + ")";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(x, y, 42, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+
+    function drawSwitchScene() {
+        px(0, 0, cv.width, cv.height, "#17243a");
+        px(0, 315, cv.width, 145, "#2c3b55");
+        px(0, 315, cv.width, 8, "#53677e");
+        px(250, 54, 220, 150, "#0b101c");
+        px(262, 66, 196, 126, "#2a4d62");
+        px(274, 78, 172, 102, "#172a3c");
+        text("CO-OP", 360, 104, "#b9e4ff", 21, "center");
+        const game = state.switchGame;
+        if (game.started && !game.finished) {
+            const expected = SWITCH_SEQUENCE[game.step];
+            text(expected === "left" ? "◀" : "▶", 360, 148, expected === "left" ? "#ef9ba9" : "#66b9ef", 44, "center");
+        } else if (game.finished) {
+            text("CLEAR!", 360, 148, "#efc76a", 29, "center");
+        } else {
+            text("PRESS START", 360, 148, "#7893aa", 15, "center");
+        }
+        px(277, 222, 166, 24, "#8c654a");
+        px(294, 246, 132, 38, "#6f4c3b");
+        drawPixelPerson(224 + (game.hits * 2.2), 318, "#d97080", false);
+        drawPixelPerson(496 - (game.hits * 2.2), 318, "#579fb2", true);
+        px(274, 340, 68, 34, "#d86677");
+        px(282, 348, 52, 18, "#f0b0b8");
+        px(377, 340, 68, 34, "#4b9fb1");
+        px(385, 348, 52, 18, "#a3d7df");
+        text("A / ←", 308, 398, "#f4c5cb", 13, "center");
+        text("D / →", 411, 398, "#bfe8ee", 13, "center");
+        if (game.hits >= 9) {
+            text("默契正在让距离变近", 360, 35, "#efc76a", 13, "center");
+        }
+    }
+
+    function drawPixelPerson(x, ground, shirt, flipped) {
+        px(x - 13, ground - 86, 26, 26, "#d7a075");
+        px(x - 17, ground - 92, 34, 13, "#3c2c2e");
+        px(x - 18, ground - 62, 36, 38, shirt);
+        px(x - 13, ground - 24, 10, 24, "#283a4e");
+        px(x + 3, ground - 24, 10, 24, "#283a4e");
+        px(x + (flipped ? -20 : 14), ground - 57, 12, 10, "#d7a075");
+        px(x + (flipped ? -29 : 22), ground - 55, 11, 8, "#efc76a");
+    }
+
+    function drawMeteorScene() {
+        drawNightSky(true);
+        px(0, 300, cv.width, 160, "#18352f");
+        px(0, 300, cv.width, 6, "#4f7654");
+        for (let x = 0; x < 720; x += 42) {
+            px(x, 286 - (x % 84 ? 0 : 8), 4, 18, "#6f9c62");
+        }
+        drawPot(360, 350);
+        drawPlant(4, 360, 331);
+        const m = state.meteor.current;
+        if (m) drawMeteor(m.x, m.y);
+        for (let i = 0; i < state.meteor.caught; i++) {
+            const angle = -Math.PI / 2 + (i - 2) * .32;
+            const sx = 360 + Math.cos(angle) * 58;
+            const sy = 184 + Math.sin(angle) * 28;
+            drawSmallStar(sx, sy, "#efc76a");
+        }
+        text("WISHES  " + state.meteor.caught + " / 5", 30, 34, "#d7ecfa", 13);
+    }
+
+    function drawMeteor(x, y) {
+        for (let i = 1; i <= 7; i++) {
+            line(x - i * 12, y - i * 5, x - (i - 1) * 12, y - (i - 1) * 5, "rgba(239,199,106," + (1 - i / 8) + ")", 4);
+        }
+        drawSmallStar(x, y, "#fff0a9");
+    }
+
+    function drawSmallStar(x, y, color) {
+        px(x - 4, y - 14, 8, 28, color);
+        px(x - 14, y - 4, 28, 8, color);
+        px(x - 8, y - 8, 16, 16, color);
+        px(x - 3, y - 3, 6, 6, "#ffffff");
+    }
+
+    function drawBloomScene() {
+        drawGardenBase();
+        drawPot(360, 345);
+        const elapsed = (performance.now() - state.bloomStarted) / 1000;
+        const bloomProgress = clamp((elapsed - .8) / 2.5, 0, 1);
+        drawPlant(5, 360, 328, bloomProgress);
+        const orbit = [
+            { icon: "☕", x: 185, y: 220, delay: .3 },
+            { icon: "▤", x: 255, y: 112, delay: .8 },
+            { icon: "◆", x: 465, y: 112, delay: 1.3 },
+            { icon: "★", x: 535, y: 220, delay: 1.8 }
+        ];
+        orbit.forEach(function (item, index) {
+            const p = clamp((elapsed - item.delay) / .8, 0, 1);
+            if (p <= 0) return;
+            const y = item.y + Math.sin(state.tick / 18 + index) * 5;
+            ctx.globalAlpha = p;
+            text(item.icon, item.x, y, item.icon === "★" ? "#efc76a" : "#b9e4ff", 27, "center");
+            ctx.globalAlpha = 1;
+        });
+        if (elapsed > 4.2) {
+            ctx.globalAlpha = clamp((elapsed - 4.2) / 1.1, 0, 1);
+            text("原来每一件小事，都在让它长大。", 360, 420, "#f4ead5", 18, "center");
+            ctx.globalAlpha = 1;
+        }
+        if (elapsed > 6.4 && state.chapter === "bloom") {
+            unlockMemory("flower");
+            goToChapter("confession");
+        }
+    }
+
+    function drawConfessionScene() {
+        drawGardenBase();
+        drawPot(360, 345);
+        drawPlant(5, 360, 328, 1);
+        ctx.fillStyle = "rgba(7,16,29,.18)";
+        ctx.fillRect(0, 0, cv.width, cv.height);
+        for (let i = 0; i < 10; i++) {
+            const angle = state.tick / 90 + i * Math.PI * 2 / 10;
+            const x = 360 + Math.cos(angle) * (98 + (i % 2) * 28);
+            const y = 180 + Math.sin(angle) * (58 + (i % 3) * 10);
+            drawSmallStar(x, y, i % 2 ? "#b9e4ff" : "#efc76a");
+        }
+    }
+
+    function burst(x, y, color, count, speed) {
+        for (let i = 0; i < count; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const velocity = (20 + Math.random() * speed) / 100;
+            state.particles.push({
+                x: x,
+                y: y,
+                vx: Math.cos(angle) * velocity * 60,
+                vy: Math.sin(angle) * velocity * 60 - 10,
+                life: .7 + Math.random() * .9,
+                maxLife: 1.6,
+                color: color,
+                size: 2 + Math.floor(Math.random() * 5)
+            });
+        }
+    }
+
+    function updateParticles(dt) {
+        state.particles.forEach(function (particle) {
+            particle.x += particle.vx * dt;
+            particle.y += particle.vy * dt;
+            particle.vy += 32 * dt;
+            particle.life -= dt;
+        });
+        state.particles = state.particles.filter(function (particle) { return particle.life > 0; });
+    }
+
+    function drawParticles() {
+        state.particles.forEach(function (particle) {
+            ctx.globalAlpha = clamp(particle.life / particle.maxLife, 0, 1);
+            px(particle.x, particle.y, particle.size, particle.size, particle.color);
+        });
+        ctx.globalAlpha = 1;
+    }
+
+    function updateMeteor(now, dt) {
+        if (state.chapter !== "meteor") return;
+        if (!state.meteor.current && state.meteor.caught < 5 && now >= state.meteor.respawnAt) {
+            spawnMeteor(now);
+        }
+        const m = state.meteor.current;
+        if (!m) return;
+        m.x += m.vx * dt;
+        m.y += m.vy * dt;
+        if (m.x > cv.width + 70 || m.y > 300) {
+            state.meteor.current = null;
+            state.meteor.respawnAt = now + 650;
+            showToast("这颗流星飞远了，下一颗还会再来。", 1600);
+        }
+    }
+
+    function renderScene() {
+        ctx.clearRect(0, 0, cv.width, cv.height);
+        if (state.chapter === "prologue") drawPrologue();
+        else if (state.chapter === "seed") drawSeedScene();
+        else if (state.chapter === "restaurant") drawRestaurant();
+        else if (state.chapter === "switch") drawSwitchScene();
+        else if (state.chapter === "meteor") drawMeteorScene();
+        else if (state.chapter === "bloom") drawBloomScene();
+        else drawConfessionScene();
+        drawParticles();
+    }
+
+    function loop(now) {
+        const dt = Math.min(.05, Math.max(0, (now - state.lastTime) / 1000));
+        state.lastTime = now;
+        state.tick += 1;
+        updateParticles(dt);
+        updateMeteor(now, dt);
+        renderScene();
         requestAnimationFrame(loop);
     }
 
-    // ---------- 交互 ----------
-    const MESSAGES = {
-        coffee: [
-            "> 你浇了一杯热咖啡，种子咕嘟咕嘟喝光了！",
-            "> 咖啡的香气让花儿精神一振！",
-            "> 浓郁的咖啡渗入土壤，很有营养！",
-            "> 花儿好像喜欢拿铁的味道~"
-        ],
-        choco: [
-            "> 你撒下香甜的巧克力粉，土壤变甜了！",
-            "> 巧克力粉慢慢融化，花儿开心地摇摆！",
-            "> 可可的香气弥漫在花园里~",
-            "> 甜甜的味道让花儿长得更快了！"
-        ]
-    };
-
-    function setMessage(t) { msgEl.textContent = t; }
-
-    function updateHUD() {
-        const g = Math.min(100, Math.round(growth));
-        barFill.style.width = g + "%";
-        growthNum.textContent = g + " / 100";
-        stageText.textContent = "STAGE: " + STAGES[stageIndex()];
+    const saved = loadProgress();
+    if (saved) {
+        state.memories = saved.memories;
+        goToChapter(saved.chapter, { skipSave: true });
+    } else {
+        goToChapter("prologue", { skipSave: true });
     }
+    requestAnimationFrame(loop);
 
-    function spawnWater(type) {
-        // 咖啡从杯口落下，巧克力粉从上方洒落
-        const color = type === "coffee" ? "#a0663a" : "#5a3a22";
-        const color2 = type === "coffee" ? "#c98a4e" : "#7a5230";
-        for (let i = 0; i < 24; i++) {
-            particles.push({
-                x: type === "coffee"
-                    ? PLANT_X - 6 + Math.random() * 12
-                    : PLANT_X - 14 + Math.random() * 28,
-                y: type === "coffee"
-                    ? 36 + Math.random() * 6
-                    : 20 + Math.random() * 30,
-                vx: (Math.random() - .5) * .4,
-                vy: 1 + Math.random() * 1.5,
-                size: type === "coffee" ? 2 : 1,
-                color: Math.random() > .5 ? color : color2,
-                life: 90
-            });
-        }
-    }
-
-    function feed(type) {
-        if (!planted || bloomed) return;
-        if (type === "coffee") cupTimer = CUP_DURATION;   // 显示咖啡杯
-        spawnWater(type);
-        const gain = type === "coffee" ? 16 : 12;
-        const before = stageIndex();
-        growth = Math.min(100, growth + gain + Math.random() * 4);
-        const pool = MESSAGES[type];
-        setMessage(pool[Math.floor(Math.random() * pool.length)]);
-
-        // 彩蛋：成长值首次过半，小老鼠跑过
-        if (growth >= 50 && !mouseSeen) {
-            mouseSeen = true;
-            mouse.active = true;
-            mouse.x = -12;
-            setTimeout(() => {
-                if (!bloomed) setMessage("> 咦？一只小老鼠被香味吸引，飞快地跑过去了！");
-            }, 800);
-        }
-
-        if (growth >= 100 && !bloomed) {
-            bloomed = true;
-            btnCoffee.disabled = true;
-            btnChoco.disabled = true;
-            setTimeout(() => {
-                setMessage("> 太棒了！一朵美丽的蓝色花朵盛开了！");
-            }, 600);
-            setTimeout(startFinale, 2800);
-        } else if (stageIndex() > before) {
-            setTimeout(() => {
-                if (!bloomed) setMessage("> 升级！现在处于「" + STAGES[stageIndex()] + "」阶段，继续加油！");
-            }, 700);
-        }
-        updateHUD();
-    }
-
-    btnSeed.addEventListener("click", () => {
-        if (planted) return;
-        planted = true;
-        growth = 5;
-        btnSeed.disabled = true;
-        btnCoffee.disabled = false;
-        btnChoco.disabled = false;
-        setMessage("> 种子埋进了土地里，快给它浇点咖啡或撒点巧克力粉吧！");
-        // 播种尘土
-        for (let i = 0; i < 10; i++) {
-            particles.push({
-                x: PLANT_X - 6 + Math.random() * 12,
-                y: BASE_Y - 4 - Math.random() * 6,
-                vx: (Math.random() - .5) * .6,
-                vy: .5 + Math.random(),
-                size: 1, color: "#4a3520", life: 40
-            });
-        }
-        updateHUD();
+    window.__BLUE_FLOWER_DEBUG__ = Object.freeze({
+        snapshot: function () {
+            return JSON.parse(JSON.stringify({
+                chapter: state.chapter,
+                memories: state.memories,
+                seedPlanted: state.seedPlanted,
+                seedGift: state.seedGift,
+                restaurantFound: state.restaurantFound,
+                switchGame: state.switchGame,
+                meteorCaught: state.meteor.caught,
+                meteorReady: Boolean(state.meteor.current)
+            }));
+        },
+        go: function (id) { goToChapter(id); },
+        plant: plantSeed,
+        nurture: nurtureSeed,
+        find: findRestaurantItem,
+        startSwitch: startSwitch,
+        switchInput: handleSwitchInput,
+        catchMeteor: catchMeteorAccessible,
+        reset: function () { resetProgress(false); }
     });
-
-    btnCoffee.addEventListener("click", () => feed("coffee"));
-    btnChoco.addEventListener("click", () => feed("choco"));
-
-    updateHUD();
-    loop();
 })();
 </script>
-
 </body>
 </html>
