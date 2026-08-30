@@ -385,30 +385,57 @@
         transition: width .55s steps(8);
     }
 
-    .charge-card {
+    .star-card {
         transition: border-color .25s, box-shadow .25s;
     }
 
-    .charge-card.ready {
+    .star-card.ready {
         border-color: rgba(107, 203, 255, .58);
         box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 0 20px rgba(72, 163, 238, .15);
     }
 
-    .charge-bar .charge-fill {
-        background: repeating-linear-gradient(
-            90deg,
-            #2c75ca 0 14px,
-            #68c8ff 14px 28px
-        );
-        box-shadow: 0 0 16px rgba(77, 181, 255, .72);
+    .star-bank {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
     }
 
-    .charge-card.ready .charge-fill {
-        background: repeating-linear-gradient(
-            90deg,
-            #70cfff 0 14px,
-            #b6efff 14px 28px
-        );
+    .star-value {
+        display: flex;
+        min-width: 0;
+        flex-direction: column;
+        gap: 4px;
+        color: var(--gold);
+        font-family: var(--pixel);
+        font-size: 9px;
+    }
+
+    .star-value small {
+        color: #8997b2;
+        font-size: 5px;
+        line-height: 1.5;
+    }
+
+    .star-pips {
+        display: flex;
+        flex: 0 0 auto;
+        gap: 8px;
+    }
+
+    .star-pip {
+        width: 22px;
+        height: 22px;
+        background: #202a42;
+        clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 94%, 50% 72%, 21% 94%, 32% 57%, 2% 35%, 39% 35%);
+        filter: drop-shadow(0 0 2px rgba(0,0,0,.8));
+        transition: background .18s, filter .18s, transform .18s;
+    }
+
+    .star-pip.filled {
+        background: #69c9ff;
+        filter: drop-shadow(0 0 6px rgba(105,201,255,.9));
+        transform: scale(1.08);
     }
 
     .meteor-legend {
@@ -438,7 +465,7 @@
     .meteor-dot.blue { color: #69c9ff; background: #69c9ff; }
     .meteor-dot.red { color: #ff6d83; background: #ff6d83; }
 
-    .btn-choco.ready {
+    .px-btn.ready {
         animation: itemReady 1.3s ease-in-out infinite;
     }
 
@@ -652,6 +679,9 @@
         .stage-hint { margin-top: 4px; font-size: 12px; line-height: 1.35; }
         .message { min-height: 48px; font-size: 13px; }
         .meteor-legend { margin-top: 7px; }
+        .star-bank { gap: 8px; }
+        .star-pips { gap: 6px; }
+        .star-pip { width: 19px; height: 19px; }
         .controls { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
         .px-btn,
         .px-btn:first-child {
@@ -741,20 +771,25 @@
                     <span>GROWTH LEVEL</span>
                     <span id="growth-num">0 / 100</span>
                 </div>
-                <div class="bar" aria-label="成长进度"><div class="bar-fill" id="bar-fill"></div></div>
+                <div class="bar" role="progressbar" aria-label="成长进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="bar-fill" id="bar-fill"></div></div>
             </section>
 
-            <section class="panel-card hud charge-card" id="charge-card">
-                <div class="hud-label">
-                    <span>METEOR CHARGE</span>
-                    <span id="charge-num">0 / 100</span>
-                </div>
-                <div class="bar charge-bar" role="progressbar" aria-label="流星充能" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-                    <div class="bar-fill charge-fill" id="charge-fill"></div>
+            <section class="panel-card hud star-card" id="star-card">
+                <div class="star-bank">
+                    <div class="star-value">
+                        <strong>BLUE STARS <span id="star-count">0 / 3</span></strong>
+                        <small>三颗可兑换一次照料</small>
+                    </div>
+                    <div class="star-pips" id="star-pips" aria-hidden="true">
+                        <i class="star-pip"></i>
+                        <i class="star-pip"></i>
+                        <i class="star-pip"></i>
+                    </div>
                 </div>
                 <div class="meteor-legend">
-                    <span><i class="meteor-dot blue"></i>蓝色 +20</span>
-                    <span><i class="meteor-dot red"></i>红色 -20</span>
+                    <span><i class="meteor-dot blue"></i>接蓝星 +1</span>
+                    <span><i class="meteor-dot red"></i>点红星 -1</span>
+                    <span>漏接蓝星 <b id="miss-count">0 / 3</b></span>
                 </div>
             </section>
 
@@ -770,17 +805,17 @@
                 </button>
                 <button class="px-btn btn-coffee" id="btn-coffee" disabled>
                     <span class="btn-icon">☕</span>
-                    <span class="btn-copy"><strong>浇咖啡</strong><small>COFFEE +16</small></span>
+                    <span class="btn-copy"><strong>浇咖啡</strong><small id="coffee-status">NEED 3 BLUE STARS</small></span>
                 </button>
                 <button class="px-btn btn-choco" id="btn-choco" disabled>
                     <span class="btn-icon">✦</span>
-                    <span class="btn-copy"><strong>巧克力</strong><small id="choco-status">NEED BLUE STAR</small></span>
+                    <span class="btn-copy"><strong>巧克力</strong><small id="choco-status">NEED 3 BLUE STARS</small></span>
                 </button>
             </div>
 
             <div class="recipe-strip" aria-label="养护提示">
-                <span>蓝流星<br><b>充能 +20</b></span>
-                <span>巧克力<br><b>满格可用</b></span>
+                <span>任意道具<br><b>消耗 3 蓝星</b></span>
+                <span>连续漏 3 蓝星<br><b>成长 -10</b></span>
             </div>
         </aside>
     </div>
@@ -811,9 +846,11 @@
     const msgEl = document.getElementById("message");
     const barFill = document.getElementById("bar-fill");
     const growthNum = document.getElementById("growth-num");
-    const chargeFill = document.getElementById("charge-fill");
-    const chargeNum = document.getElementById("charge-num");
-    const chargeCard = document.getElementById("charge-card");
+    const starCount = document.getElementById("star-count");
+    const missCount = document.getElementById("miss-count");
+    const starCard = document.getElementById("star-card");
+    const starPips = Array.from(document.querySelectorAll(".star-pip"));
+    const coffeeStatus = document.getElementById("coffee-status");
     const chocoStatus = document.getElementById("choco-status");
     const stageText = document.getElementById("stage-text");
     const stageHint = document.getElementById("stage-hint");
@@ -837,14 +874,15 @@
     let mouseSeen = false;
     let finale = { active: false, t: 0, flowers: [], curtain: 0, ended: false };
     let tick = 0;
-    let charge = 0;
+    let blueStars = 0;
+    let missedBlueStars = 0;
     let meteors = [];
     let nextMeteorAt = 90;
     let meteorFlash = 0;
 
-    const CHARGE_MAX = 100;
-    const BLUE_CHARGE = 20;
-    const RED_PENALTY = 20;
+    const STAR_COST = 3;
+    const MISS_LIMIT = 3;
+    const MISS_GROWTH_PENALTY = 10;
     const STAGES = ["空地", "种子", "发芽", "幼苗", "长叶", "花苞", "盛开!"];
     const STAGE_HINTS = [
         "土壤已经准备好了，等待第一颗种子。",
@@ -1055,18 +1093,39 @@
         }
     }
 
-    // ---------- 流星充能 ----------
-    function spawnMeteor(forcedType) {
+    // ---------- 流星群 ----------
+    function spawnMeteor(forcedType, forcedDirection, forcedY) {
+        const direction = forcedDirection || (Math.random() < .5 ? "ltr" : "rtl");
+        const speed = 3.4 + Math.random() * 1.2;
         const meteor = {
             type: forcedType || (Math.random() < .7 ? "blue" : "red"),
-            x: W + 10,
-            y: 7 + Math.random() * 38,
-            vx: -(3.4 + Math.random() * 1.2),
-            vy: .85 + Math.random() * .4,
+            direction,
+            x: direction === "ltr" ? -10 : W + 10,
+            y: forcedY === undefined ? 7 + Math.random() * 38 : forcedY,
+            vx: direction === "ltr" ? speed : -speed,
+            vy: .72 + Math.random() * .36,
             pulse: Math.random() * Math.PI * 2
         };
         meteors.push(meteor);
         return meteor;
+    }
+
+    function spawnMeteorWave() {
+        const firstDirection = Math.random() < .5 ? "ltr" : "rtl";
+        const oppositeDirection = firstDirection === "ltr" ? "rtl" : "ltr";
+        const blueFirst = Math.random() < .5;
+        const firstType = blueFirst ? "blue" : "red";
+        const secondType = blueFirst ? "red" : "blue";
+        const wave = [
+            spawnMeteor(firstType, firstDirection, 8 + Math.random() * 16),
+            spawnMeteor(secondType, oppositeDirection, 30 + Math.random() * 15)
+        ];
+
+        if (Math.random() < .62) {
+            const thirdDirection = Math.random() < .5 ? "ltr" : "rtl";
+            wave.push(spawnMeteor(Math.random() < .72 ? "blue" : "red", thirdDirection, 17 + Math.random() * 30));
+        }
+        return wave;
     }
 
     function drawFivePointStar(x, y, outerRadius, color, glow) {
@@ -1120,17 +1179,39 @@
             return;
         }
 
-        if (tick >= nextMeteorAt && meteors.length < 3) {
-            spawnMeteor();
-            nextMeteorAt = tick + 42 + Math.floor(Math.random() * 34);
+        if (tick >= nextMeteorAt && meteors.length < 5) {
+            spawnMeteorWave();
+            nextMeteorAt = tick + 92 + Math.floor(Math.random() * 46);
         }
 
+        const survivors = [];
         meteors.forEach(m => {
             m.x += m.vx;
             m.y += m.vy;
+            const crossedEdge = m.vx < 0 ? m.x < -16 : m.x > W + 16;
+            const reachedGround = m.y >= GROUND_Y - 3;
+            if (crossedEdge || reachedGround) {
+                if (m.type === "blue") recordMissedBlue();
+            } else {
+                survivors.push(m);
+            }
         });
-        meteors = meteors.filter(m => m.x > -18 && m.y < GROUND_Y - 3);
+        meteors = survivors;
         if (meteorFlash > 0) meteorFlash--;
+    }
+
+    function recordMissedBlue() {
+        missedBlueStars++;
+        if (missedBlueStars >= MISS_LIMIT) {
+            missedBlueStars = 0;
+            growth = Math.max(0, growth - MISS_GROWTH_PENALTY);
+            meteorFlash = 24;
+            setMessage("> 连续漏掉三颗蓝色流星，花朵成长 -" + MISS_GROWTH_PENALTY + "。");
+            updateHUD();
+        } else {
+            setMessage("> 漏掉一颗蓝色流星……连续漏接 " + missedBlueStars + " / " + MISS_LIMIT + "。");
+            updateStarHUD();
+        }
     }
 
     function burstMeteor(meteor) {
@@ -1155,19 +1236,26 @@
         burstMeteor(meteor);
 
         if (meteor.type === "blue") {
-            const before = charge;
-            charge = Math.min(CHARGE_MAX, charge + BLUE_CHARGE);
-            if (before < CHARGE_MAX && charge === CHARGE_MAX) {
-                setMessage("> 充能完成！巧克力道具已经可以使用了。");
+            const before = blueStars;
+            blueStars = Math.min(STAR_COST, blueStars + 1);
+            missedBlueStars = 0;
+            if (before < STAR_COST && blueStars === STAR_COST) {
+                setMessage("> 三颗蓝星集齐了！现在可以选择咖啡或巧克力照料花朵。");
+            } else if (before === STAR_COST) {
+                setMessage("> 蓝星已经装满了，快选择一种道具吧！");
             } else {
-                setMessage("> 接住蓝色流星，巧克力充能 +" + BLUE_CHARGE + "！");
+                setMessage("> 接住蓝色流星！蓝星 " + blueStars + " / " + STAR_COST + "。");
             }
         } else {
-            charge = Math.max(0, charge - RED_PENALTY);
+            const before = blueStars;
+            blueStars = Math.max(0, blueStars - 1);
             meteorFlash = 18;
-            setMessage("> 糟糕，是红色流星！巧克力充能 -" + RED_PENALTY + "。");
+            setMessage(before > 0
+                ? "> 糟糕，点中了红色流星！失去一颗已收集的蓝星。"
+                : "> 糟糕，是红色流星！好在现在还没有蓝星可扣。"
+            );
         }
-        updateChargeHUD();
+        updateStarHUD();
     }
 
     cv.addEventListener("pointerdown", event => {
@@ -1375,16 +1463,18 @@
 
     function setMessage(t) { msgEl.textContent = t; }
 
-    function updateChargeHUD() {
-        const c = Math.round(charge);
-        const ready = planted && !bloomed && c >= CHARGE_MAX;
-        chargeFill.style.width = c + "%";
-        chargeNum.textContent = c + " / " + CHARGE_MAX;
-        chargeFill.parentElement.setAttribute("aria-valuenow", c);
-        chargeCard.classList.toggle("ready", ready);
+    function updateStarHUD() {
+        const ready = planted && !bloomed && blueStars >= STAR_COST;
+        starCount.textContent = blueStars + " / " + STAR_COST;
+        missCount.textContent = missedBlueStars + " / " + MISS_LIMIT;
+        starPips.forEach((pip, index) => pip.classList.toggle("filled", index < blueStars));
+        starCard.classList.toggle("ready", ready);
+        btnCoffee.classList.toggle("ready", ready);
         btnChoco.classList.toggle("ready", ready);
+        btnCoffee.disabled = !ready;
         btnChoco.disabled = !ready;
-        chocoStatus.textContent = ready ? "CHARGED · COCOA +28" : "BLUE STAR " + c + "%";
+        coffeeStatus.textContent = ready ? "READY · COFFEE +16" : "BLUE STARS " + blueStars + " / " + STAR_COST;
+        chocoStatus.textContent = ready ? "READY · COCOA +28" : "BLUE STARS " + blueStars + " / " + STAR_COST;
     }
 
     function updateHUD() {
@@ -1398,7 +1488,7 @@
         stageText.textContent = String(stage).padStart(2, "0") + " / " + STAGES[stage];
         stageHint.textContent = STAGE_HINTS[stage];
         document.body.dataset.stage = stage;
-        updateChargeHUD();
+        updateStarHUD();
     }
 
     function spawnWater(type) {
@@ -1424,11 +1514,11 @@
 
     function feed(type) {
         if (!planted || bloomed) return;
-        if (type === "choco" && charge < CHARGE_MAX) {
-            setMessage("> 巧克力还在充能。接住蓝色流星，避开红色流星！");
+        if (blueStars < STAR_COST) {
+            setMessage("> 还需要集齐三颗蓝星，才能使用咖啡或巧克力。");
             return;
         }
-        if (type === "choco") charge = 0;
+        blueStars -= STAR_COST;
         if (type === "coffee") cupTimer = CUP_DURATION;   // 显示咖啡杯
         spawnWater(type);
         const gain = type === "coffee" ? 16 : 28;
@@ -1468,10 +1558,8 @@
         planted = true;
         growth = 5;
         btnSeed.disabled = true;
-        btnCoffee.disabled = false;
-        btnChoco.disabled = true;
-        nextMeteorAt = tick + 45;
-        setMessage("> 种子埋好了！点击蓝色流星为巧克力充能，记得避开红色流星。");
+        nextMeteorAt = tick + 30;
+        setMessage("> 种子埋好了！红蓝流星会成群从两边飞来，接住三颗蓝星可使用一次道具。");
         // 播种尘土
         for (let i = 0; i < 10; i++) {
             particles.push({
@@ -1493,13 +1581,15 @@
             planted,
             bloomed,
             growth: Math.round(growth),
-            charge,
-            meteors: meteors.map(m => ({ type: m.type, x: m.x, y: m.y, vx: m.vx, vy: m.vy })),
+            blueStars,
+            missedBlueStars,
+            meteors: meteors.map(m => ({ type: m.type, direction: m.direction, x: m.x, y: m.y, vx: m.vx, vy: m.vy })),
+            coffeeEnabled: !btnCoffee.disabled,
             chocolateEnabled: !btnChoco.disabled
         }),
         plant: () => btnSeed.click(),
-        spawnMeteor: (type, freeze = true) => {
-            const meteor = spawnMeteor(type === "red" ? "red" : "blue");
+        spawnMeteor: (type, freeze = true, direction) => {
+            const meteor = spawnMeteor(type === "red" ? "red" : "blue", direction === "ltr" ? "ltr" : direction === "rtl" ? "rtl" : undefined);
             meteor.x = 112;
             meteor.y = 42;
             if (freeze) {
@@ -1508,6 +1598,8 @@
             }
             return meteor.type;
         },
+        spawnWave: () => spawnMeteorWave().map(meteor => meteor.type),
+        clearMeteors: () => { meteors = []; },
         collectMeteor: type => {
             let index = meteors.findIndex(m => m.type === type);
             if (index < 0) {
@@ -1520,6 +1612,8 @@
             }
             collectMeteor(index);
         },
+        missBlue: () => recordMissedBlue(),
+        useCoffee: () => btnCoffee.click(),
         useChocolate: () => btnChoco.click()
     });
 
