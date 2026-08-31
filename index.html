@@ -879,10 +879,15 @@
     let meteors = [];
     let nextMeteorAt = 90;
     let meteorFlash = 0;
+    let assistMode = false;
+    let lastMeteorHitAt = null;
 
     const STAR_COST = 3;
     const MISS_LIMIT = 3;
     const MISS_GROWTH_PENALTY = 10;
+    const ASSIST_DELAY_MS = 15000;
+    const NORMAL_HIT_RADIUS = 16;
+    const ASSIST_HIT_RADIUS = 25;
     const STAGES = ["空地", "种子", "发芽", "幼苗", "长叶", "花苞", "盛开!"];
     const STAGE_HINTS = [
         "土壤已经准备好了，等待第一颗种子。",
@@ -1096,14 +1101,16 @@
     // ---------- 流星群 ----------
     function spawnMeteor(forcedType, forcedDirection, forcedY) {
         const direction = forcedDirection || (Math.random() < .5 ? "ltr" : "rtl");
-        const speed = 3.4 + Math.random() * 1.2;
+        const speed = assistMode
+            ? 1.15 + Math.random() * .3
+            : 3.4 + Math.random() * 1.2;
         const meteor = {
             type: forcedType || (Math.random() < .7 ? "blue" : "red"),
             direction,
             x: direction === "ltr" ? -10 : W + 10,
             y: forcedY === undefined ? 7 + Math.random() * 38 : forcedY,
             vx: direction === "ltr" ? speed : -speed,
-            vy: .72 + Math.random() * .36,
+            vy: assistMode ? .32 + Math.random() * .16 : .72 + Math.random() * .36,
             pulse: Math.random() * Math.PI * 2
         };
         meteors.push(meteor);
@@ -1114,18 +1121,41 @@
         const firstDirection = Math.random() < .5 ? "ltr" : "rtl";
         const oppositeDirection = firstDirection === "ltr" ? "rtl" : "ltr";
         const blueFirst = Math.random() < .5;
-        const firstType = blueFirst ? "blue" : "red";
-        const secondType = blueFirst ? "red" : "blue";
+        const firstType = assistMode ? "blue" : (blueFirst ? "blue" : "red");
+        const secondType = assistMode ? "red" : (blueFirst ? "red" : "blue");
+        const firstY = assistMode ? 10 + Math.random() * 8 : 8 + Math.random() * 16;
+        const secondY = assistMode ? 34 + Math.random() * 8 : 30 + Math.random() * 15;
         const wave = [
-            spawnMeteor(firstType, firstDirection, 8 + Math.random() * 16),
-            spawnMeteor(secondType, oppositeDirection, 30 + Math.random() * 15)
+            spawnMeteor(firstType, firstDirection, firstY),
+            spawnMeteor(secondType, oppositeDirection, secondY)
         ];
 
-        if (Math.random() < .62) {
-            const thirdDirection = Math.random() < .5 ? "ltr" : "rtl";
-            wave.push(spawnMeteor(Math.random() < .72 ? "blue" : "red", thirdDirection, 17 + Math.random() * 30));
+        if (assistMode || Math.random() < .62) {
+            const thirdDirection = assistMode ? firstDirection : (Math.random() < .5 ? "ltr" : "rtl");
+            const thirdType = assistMode ? "blue" : (Math.random() < .72 ? "blue" : "red");
+            const thirdY = assistMode ? 58 + Math.random() * 8 : 17 + Math.random() * 30;
+            wave.push(spawnMeteor(thirdType, thirdDirection, thirdY));
         }
         return wave;
+    }
+
+    function activateAssistMode() {
+        if (assistMode) return;
+        assistMode = true;
+        document.body.dataset.difficulty = "gentle";
+        meteors.forEach(meteor => {
+            const direction = Math.sign(meteor.vx) || (meteor.direction === "ltr" ? 1 : -1);
+            const normalRatio = Math.max(0, Math.min(1, (Math.abs(meteor.vx) - 3.4) / 1.2));
+            meteor.vx = direction * (1.15 + normalRatio * .3);
+            meteor.vy = .32 + Math.random() * .16;
+        });
+        nextMeteorAt = Math.max(nextMeteorAt, tick + 50);
+        setMessage("> 夜空好像察觉到了你的犹豫，流星慢下来等你了。慢慢来就好。");
+    }
+
+    function checkAssistMode(now = performance.now()) {
+        if (!planted || bloomed || assistMode || lastMeteorHitAt === null) return;
+        if (now - lastMeteorHitAt >= ASSIST_DELAY_MS) activateAssistMode();
     }
 
     function drawFivePointStar(x, y, outerRadius, color, glow) {
@@ -1179,9 +1209,13 @@
             return;
         }
 
+        checkAssistMode();
+
         if (tick >= nextMeteorAt && meteors.length < 5) {
             spawnMeteorWave();
-            nextMeteorAt = tick + 92 + Math.floor(Math.random() * 46);
+            nextMeteorAt = assistMode
+                ? tick + 155 + Math.floor(Math.random() * 40)
+                : tick + 92 + Math.floor(Math.random() * 46);
         }
 
         const survivors = [];
@@ -1234,6 +1268,7 @@
         if (!meteor || !planted || bloomed) return;
         meteors.splice(index, 1);
         burstMeteor(meteor);
+        lastMeteorHitAt = performance.now();
 
         if (meteor.type === "blue") {
             const before = blueStars;
@@ -1268,9 +1303,10 @@
         };
         let hitIndex = -1;
         let nearest = Infinity;
+        const hitRadius = assistMode ? ASSIST_HIT_RADIUS : NORMAL_HIT_RADIUS;
         meteors.forEach((meteor, index) => {
             const distance = Math.hypot(point.x - meteor.x, point.y - meteor.y);
-            if (distance < 16 && distance < nearest) {
+            if (distance < hitRadius && distance < nearest) {
                 nearest = distance;
                 hitIndex = index;
             }
@@ -1557,6 +1593,7 @@
         if (planted) return;
         planted = true;
         growth = 5;
+        lastMeteorHitAt = performance.now();
         btnSeed.disabled = true;
         nextMeteorAt = tick + 30;
         setMessage("> 种子埋好了！红蓝流星会成群从两边飞来，接住三颗蓝星可使用一次道具。");
@@ -1583,6 +1620,9 @@
             growth: Math.round(growth),
             blueStars,
             missedBlueStars,
+            assistMode,
+            meteorHitRadius: assistMode ? ASSIST_HIT_RADIUS : NORMAL_HIT_RADIUS,
+            message: msgEl.textContent,
             meteors: meteors.map(m => ({ type: m.type, direction: m.direction, x: m.x, y: m.y, vx: m.vx, vy: m.vy })),
             coffeeEnabled: !btnCoffee.disabled,
             chocolateEnabled: !btnChoco.disabled
@@ -1600,6 +1640,10 @@
         },
         spawnWave: () => spawnMeteorWave().map(meteor => meteor.type),
         clearMeteors: () => { meteors = []; },
+        setIdleMilliseconds: milliseconds => {
+            lastMeteorHitAt = performance.now() - Math.max(0, milliseconds);
+            checkAssistMode();
+        },
         collectMeteor: type => {
             let index = meteors.findIndex(m => m.type === type);
             if (index < 0) {
