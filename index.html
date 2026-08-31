@@ -542,6 +542,20 @@
     .btn-copy small { overflow: hidden; color: rgba(255,255,255,.58); font-family: var(--pixel); font-size: 5px; text-overflow: ellipsis; white-space: nowrap; }
 
     .btn-seed { background: linear-gradient(145deg, #668f4f, #46673d); }
+    .btn-seed.btn-kiss {
+        background: linear-gradient(145deg, #e8759b, #a83f6d);
+        border-color: rgba(255, 205, 222, .48);
+    }
+    .btn-seed.btn-kiss .btn-icon {
+        color: #fff2f7;
+        background: rgba(96, 19, 57, .28);
+        font-family: var(--display);
+        font-size: 18px;
+    }
+    .btn-seed.btn-kiss.kiss-complete:disabled {
+        opacity: .72;
+        filter: saturate(.8);
+    }
     .btn-coffee { background: linear-gradient(145deg, #ac704d, #754832); }
     .btn-choco { background: linear-gradient(145deg, #775044, #51342f); }
 
@@ -800,8 +814,8 @@
 
             <div class="controls">
                 <button class="px-btn btn-seed" id="btn-seed">
-                    <span class="btn-icon">01</span>
-                    <span class="btn-copy"><strong>播种</strong><small>PLANT THE SEED</small></span>
+                    <span class="btn-icon" id="seed-icon">01</span>
+                    <span class="btn-copy"><strong id="seed-label">播种</strong><small id="seed-status">PLANT THE SEED</small></span>
                 </button>
                 <button class="px-btn btn-coffee" id="btn-coffee" disabled>
                     <span class="btn-icon">☕</span>
@@ -855,6 +869,9 @@
     const stageText = document.getElementById("stage-text");
     const stageHint = document.getElementById("stage-hint");
     const btnSeed = document.getElementById("btn-seed");
+    const seedIcon = document.getElementById("seed-icon");
+    const seedLabel = document.getElementById("seed-label");
+    const seedStatus = document.getElementById("seed-status");
     const btnCoffee = document.getElementById("btn-coffee");
     const btnChoco = document.getElementById("btn-choco");
     const endingEl = document.getElementById("ending-text");
@@ -866,8 +883,10 @@
     // ---------- 游戏状态 ----------
     let growth = 0;          // 0 - 100
     let planted = false;
+    let awaitingKiss = false;
     let bloomed = false;
     let particles = [];
+    let hearts = [];
     let sparkles = [];
     let cupTimer = 0;   // 咖啡杯显示计时
     let mouse = { active: false, x: -20 };   // 小老鼠彩蛋
@@ -888,7 +907,7 @@
     const ASSIST_DELAY_MS = 15000;
     const NORMAL_HIT_RADIUS = 16;
     const ASSIST_HIT_RADIUS = 25;
-    const STAGES = ["空地", "种子", "发芽", "幼苗", "长叶", "花苞", "盛开!"];
+    const STAGES = ["空地", "种子", "发芽", "幼苗", "长叶", "花苞", "等待香吻", "盛开!"];
     const STAGE_HINTS = [
         "土壤已经准备好了，等待第一颗种子。",
         "种子正在听夜风，给它一点耐心。",
@@ -896,10 +915,12 @@
         "幼苗舒展身体，需要继续补充能量。",
         "叶片越来越茂盛，蓝色花苞正在酝酿。",
         "就差一点了，它在等待最后一次照料。",
+        "花苞已经准备好了，只差一个香吻。",
         "蓝色花朵盛开，整座花园都亮了起来。"
     ];
     function stageIndex() {
         if (!planted) return 0;
+        if (bloomed) return 7;
         if (growth < 15) return 1;
         if (growth < 35) return 2;
         if (growth < 55) return 3;
@@ -1024,7 +1045,7 @@
     function stemTop() {
         // 根据成长值返回茎的高度
         const st = stageIndex();
-        return [0, 0, 6, 16, 30, 44, 50][st];
+        return [0, 0, 6, 16, 30, 44, 50, 50][st];
     }
 
     function drawPlant() {
@@ -1070,14 +1091,18 @@
         }
 
         // 花苞
-        if (st === 5) {
+        if (st === 5 || st === 6) {
             px(cx - 2, topY - 5, 5, 5, "#3e6ea8");
             px(cx - 1, topY - 6, 3, 1, "#5aa9e6");
             px(cx - 2, topY, 5, 1, "#3e7a2e");
+            if (st === 6 && (tick >> 3) % 2 === 0) {
+                px(cx - 5, topY - 8, 1, 1, "#ffb4cd");
+                px(cx + 5, topY - 4, 1, 1, "#ffd6e3");
+            }
         }
 
         // 盛开的蓝花
-        if (st === 6) {
+        if (st === 7) {
             const cy = topY - 5;
             // 花瓣（深蓝外层 + 亮蓝内层）
             const petals = [
@@ -1154,7 +1179,7 @@
     }
 
     function checkAssistMode(now = performance.now()) {
-        if (!planted || bloomed || assistMode || lastMeteorHitAt === null) return;
+        if (!planted || awaitingKiss || bloomed || assistMode || lastMeteorHitAt === null) return;
         if (now - lastMeteorHitAt >= ASSIST_DELAY_MS) activateAssistMode();
     }
 
@@ -1204,8 +1229,9 @@
     }
 
     function updateMeteors() {
-        if (!planted || bloomed || finale.active) {
+        if (!planted || awaitingKiss || bloomed || finale.active) {
             meteors = [];
+            if (meteorFlash > 0) meteorFlash--;
             return;
         }
 
@@ -1265,7 +1291,7 @@
 
     function collectMeteor(index) {
         const meteor = meteors[index];
-        if (!meteor || !planted || bloomed) return;
+        if (!meteor || !planted || awaitingKiss || bloomed) return;
         meteors.splice(index, 1);
         burstMeteor(meteor);
         lastMeteorHitAt = performance.now();
@@ -1294,7 +1320,7 @@
     }
 
     cv.addEventListener("pointerdown", event => {
-        if (!planted || bloomed || meteors.length === 0) return;
+        if (!planted || awaitingKiss || bloomed || meteors.length === 0) return;
         event.preventDefault();
         const rect = cv.getBoundingClientRect();
         const point = {
@@ -1351,6 +1377,62 @@
                 px(s.x, s.y - 1, 1, 1, "#9fd4ff");
                 px(s.x, s.y + 1, 1, 1, "#9fd4ff");
             }
+        });
+    }
+
+    const HEART_SHAPE = [
+        [0, 0], [1, 0], [3, 0], [4, 0],
+        [-1, 1], [0, 1], [1, 1], [2, 1], [3, 1], [4, 1], [5, 1],
+        [0, 2], [1, 2], [2, 2], [3, 2], [4, 2],
+        [1, 3], [2, 3], [3, 3],
+        [2, 4]
+    ];
+
+    function spawnHeartCelebration() {
+        const colors = ["#ff5f91", "#ff82aa", "#ffacc5", "#ffd0de", "#eda2ff"];
+        hearts = [];
+
+        // 先让整片天空立刻布满爱心，再从主花位置追加一轮迸发。
+        for (let i = 0; i < 48; i++) {
+            const life = 230 + Math.floor(Math.random() * 110);
+            hearts.push({
+                x: 4 + Math.random() * (W - 10),
+                y: 7 + Math.random() * (H - 22),
+                vx: (Math.random() - .5) * .22,
+                vy: -.12 - Math.random() * .28,
+                size: Math.random() < .22 ? 2 : 1,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                life,
+                maxLife: life,
+                phase: Math.random() * Math.PI * 2
+            });
+        }
+        for (let i = 0; i < 30; i++) {
+            const life = 210 + Math.floor(Math.random() * 90);
+            hearts.push({
+                x: PLANT_X + (Math.random() - .5) * 12,
+                y: BASE_Y - 52 + (Math.random() - .5) * 10,
+                vx: (Math.random() - .5) * 1.55,
+                vy: -.45 - Math.random() * 1.25,
+                size: Math.random() < .3 ? 2 : 1,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                life,
+                maxLife: life,
+                phase: Math.random() * Math.PI * 2
+            });
+        }
+    }
+
+    function drawHearts() {
+        hearts.forEach(heart => {
+            const unit = heart.size;
+            ctx.save();
+            ctx.globalAlpha = Math.min(1, heart.life / 45);
+            HEART_SHAPE.forEach(([hx, hy]) => {
+                px(heart.x + hx * unit, heart.y + hy * unit, unit, unit, heart.color);
+            });
+            px(heart.x, heart.y + unit, unit, unit, "#fff2f7");
+            ctx.restore();
         });
     }
 
@@ -1430,6 +1512,7 @@
         drawMouse();
         drawFinale();
         drawParticles();
+        drawHearts();
         drawCurtain();
     }
 
@@ -1443,6 +1526,12 @@
             p.life--;
         });
         particles = particles.filter(p => p.life > 0 && p.y < BASE_Y + 2);
+        hearts.forEach(heart => {
+            heart.x += heart.vx + Math.sin(tick / 15 + heart.phase) * .035;
+            heart.y += heart.vy;
+            heart.life--;
+        });
+        hearts = hearts.filter(heart => heart.life > 0 && heart.y > -14 && heart.x > -16 && heart.x < W + 16);
         if (cupTimer > 0) cupTimer--;
         updateMeteors();
 
@@ -1500,7 +1589,7 @@
     function setMessage(t) { msgEl.textContent = t; }
 
     function updateStarHUD() {
-        const ready = planted && !bloomed && blueStars >= STAR_COST;
+        const ready = planted && !awaitingKiss && !bloomed && blueStars >= STAR_COST;
         starCount.textContent = blueStars + " / " + STAR_COST;
         missCount.textContent = missedBlueStars + " / " + MISS_LIMIT;
         starPips.forEach((pip, index) => pip.classList.toggle("filled", index < blueStars));
@@ -1548,8 +1637,41 @@
         }
     }
 
+    function prepareKiss() {
+        if (awaitingKiss || bloomed) return;
+        awaitingKiss = true;
+        meteors = [];
+        particles = [];
+        cupTimer = 0;
+        mouse.active = false;
+        meteorFlash = 0;
+        btnSeed.disabled = false;
+        btnSeed.classList.add("btn-kiss", "ready");
+        seedIcon.textContent = "💋";
+        seedLabel.textContent = "香吻";
+        seedStatus.textContent = "KISS TO BLOOM";
+        setMessage("> 花苞已经准备好了……还差你的一个香吻，才愿意真正盛开。");
+    }
+
+    function triggerKissBloom() {
+        if (!awaitingKiss || bloomed) return;
+        awaitingKiss = false;
+        bloomed = true;
+        meteors = [];
+        btnSeed.disabled = true;
+        btnSeed.classList.remove("ready");
+        btnSeed.classList.add("kiss-complete");
+        seedStatus.textContent = "KISS DELIVERED";
+        spawnHeartCelebration();
+        setMessage("> 收到你的香吻，蓝色花朵终于盛开了，爱心也落满了整个花园！");
+        updateHUD();
+        setTimeout(() => {
+            if (bloomed && !finale.active) startFinale();
+        }, 4200);
+    }
+
     function feed(type) {
-        if (!planted || bloomed) return;
+        if (!planted || awaitingKiss || bloomed) return;
         if (blueStars < STAR_COST) {
             setMessage("> 还需要集齐三颗蓝星，才能使用咖啡或巧克力。");
             return;
@@ -1574,13 +1696,7 @@
         }
 
         if (growth >= 100 && !bloomed) {
-            bloomed = true;
-            btnCoffee.disabled = true;
-            btnChoco.disabled = true;
-            setTimeout(() => {
-                setMessage("> 太棒了！一朵美丽的蓝色花朵盛开了！");
-            }, 600);
-            setTimeout(startFinale, 2800);
+            prepareKiss();
         } else if (stageIndex() > before) {
             setTimeout(() => {
                 if (!bloomed) setMessage("> 升级！现在处于「" + STAGES[stageIndex()] + "」阶段，继续加油！");
@@ -1590,6 +1706,10 @@
     }
 
     btnSeed.addEventListener("click", () => {
+        if (awaitingKiss) {
+            triggerKissBloom();
+            return;
+        }
         if (planted) return;
         planted = true;
         growth = 5;
@@ -1616,8 +1736,11 @@
     window.__PIXEL_GARDEN_DEBUG__ = Object.freeze({
         snapshot: () => ({
             planted,
+            awaitingKiss,
             bloomed,
             growth: Math.round(growth),
+            stage: stageIndex(),
+            heartCount: hearts.length,
             blueStars,
             missedBlueStars,
             assistMode,
@@ -1644,6 +1767,10 @@
             lastMeteorHitAt = performance.now() - Math.max(0, milliseconds);
             checkAssistMode();
         },
+        setGrowth: value => {
+            growth = Math.max(0, Math.min(100, Number(value) || 0));
+            updateHUD();
+        },
         collectMeteor: type => {
             let index = meteors.findIndex(m => m.type === type);
             if (index < 0) {
@@ -1658,7 +1785,8 @@
         },
         missBlue: () => recordMissedBlue(),
         useCoffee: () => btnCoffee.click(),
-        useChocolate: () => btnChoco.click()
+        useChocolate: () => btnChoco.click(),
+        kiss: () => triggerKissBloom()
     });
 
     updateHUD();
