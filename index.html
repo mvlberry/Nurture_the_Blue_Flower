@@ -907,6 +907,7 @@
     const ASSIST_DELAY_MS = 15000;
     const NORMAL_HIT_RADIUS = 16;
     const ASSIST_HIT_RADIUS = 25;
+    const FINALE_HOLD_FRAMES = 320;
     const STAGES = ["空地", "种子", "发芽", "幼苗", "长叶", "花苞", "等待香吻", "盛开!"];
     const STAGE_HINTS = [
         "土壤已经准备好了，等待第一颗种子。",
@@ -1438,6 +1439,7 @@
 
     // ---------- 结局演出 ----------
     function startFinale() {
+        if (finale.active) return;
         finale.active = true;
         // 后排：沿地面线开一排花（避开中间主花）
         const backXs = [8, 20, 32, 44, 58, 70, 92, 104, 116, 128, 140, 152];
@@ -1544,7 +1546,7 @@
         // 结局演出推进
         if (finale.active) {
             finale.t++;
-            if (finale.t > 140 && finale.curtain < H / 2) {
+            if (finale.t > FINALE_HOLD_FRAMES && finale.curtain < H / 2) {
                 finale.curtain = Math.min(H / 2, finale.curtain + 1.5);
                 if (finale.curtain >= H / 2 && !finale.ended) {
                     finale.ended = true;
@@ -1741,6 +1743,14 @@
             growth: Math.round(growth),
             stage: stageIndex(),
             heartCount: hearts.length,
+            finaleHoldFrames: FINALE_HOLD_FRAMES,
+            finale: {
+                active: finale.active,
+                t: finale.t,
+                curtain: finale.curtain,
+                ended: finale.ended,
+                endingVisible: endingEl.classList.contains("show")
+            },
             blueStars,
             missedBlueStars,
             assistMode,
@@ -1786,7 +1796,12 @@
         missBlue: () => recordMissedBlue(),
         useCoffee: () => btnCoffee.click(),
         useChocolate: () => btnChoco.click(),
-        kiss: () => triggerKissBloom()
+        kiss: () => triggerKissBloom(),
+        startFinale: () => startFinale(),
+        setFinaleTime: value => {
+            if (!finale.active) startFinale();
+            finale.t = Math.max(0, Number(value) || 0);
+        }
     });
 
     updateHUD();
